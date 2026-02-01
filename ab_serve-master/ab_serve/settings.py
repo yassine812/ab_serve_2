@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get(
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() in {"1", "true", "yes", "y", "on"}
+DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() in {"1", "true", "yes", "y", "on"}
 
 ALLOWED_HOSTS = [
     h.strip()

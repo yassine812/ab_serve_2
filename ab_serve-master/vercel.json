@@ -1,21 +1,10 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "functions": {
-    "api/**/*.py": {
-      "excludeFiles": "{static/**,staticfiles/**,Gamme/static/**}"
-    }
-  },
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
   "routes": [
     { "src": "/static/(.*)", "dest": "/staticfiles/$1" },
     { "src": "/staticfiles/(.*)", "dest": "/staticfiles/$1" },
-    { "src": "/(.*)", "dest": "api/index.py" }
+    { "src": "/media/(.*)", "dest": "/api/index.py" },
+    { "src": "/admin/(.*)", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/api/index.py" }
   ]
 }
 
