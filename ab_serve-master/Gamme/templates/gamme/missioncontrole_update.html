@@ -1,0 +1,2335 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="missionForm" class="needs-validation">
+  {% csrf_token %}
+  <style>
+    .photo-cell {
+      text-align: center;
+      margin-bottom: 10px;
+      position: relative;
+      display: inline-block;
+    }
+    .operation-photo {
+      max-width: 60px;
+      max-height: 60px;
+      cursor: pointer;
+      border: 2px solid #fff;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    .operation-photo:hover {
+      transform: scale(1.1);
+      border-color: #007bff;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
+    }
+    .photo-description {
+      font-size: 0.8em;
+      color: #666;
+      margin-top: 5px;
+      width: 100%;
+      text-align: left;
+    }
+    .photo-description input {
+      border: none;
+      background: transparent;
+      border-bottom: 1px solid #ddd;
+      width: 100%;
+      padding: 2px 0;
+      font-size: 0.8em;
+    }
+    .photo-description input:focus {
+      outline: none;
+      border-bottom-color: #007bff;
+    }
+    .photo-delete-btn {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: none;
+      transition: all 0.2s ease;
+    }
+    .photo-cell:hover .photo-delete-btn {
+      display: block;
+    }
+    .photo-delete-btn:hover {
+      background: #c82333;
+      transform: scale(1.1);
+    }
+    .photo-forms-container {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      min-height: 60px;
+      position: relative;
+    }
+    .photo-add-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .photo-add-btn.disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+    .photo-add-btn:hover {
+      background: #0056b3;
+      transform: scale(1.1);
+    }
+    .photo-add-btn i {
+      margin: 0;
+    }
+   
+    .zoom-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+    .zoom-image {
+      max-width: 90%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+    .zoom-description {
+      color: #fff;
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      text-align: center;
+      max-width: 90%;
+      word-break: break-word;
+    }
+    .zoom-close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 1010;
+    }
+  </style>
+
+  <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="custom-tabs-four-home-tab" data-bs-toggle="pill" href="#custom-tabs-four-home" role="tab">Mission</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="custom-tabs-four-profile-tab" data-bs-toggle="pill" href="#custom-tabs-four-profile" role="tab">Gamme</a>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="custom-tabs-four-tabContent">
+    <!-- Mission -->
+    <div class="tab-pane fade show active" id="custom-tabs-four-home" role="tabpanel">
+      <div class="card card-info card-outline mb-4">
+        <div class="card-header"><div class="card-title">Mission</div></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Code</label>
+              <input type="text" class="form-control" name="code" value="{{ missioncontrole.code }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Intitulé</label>
+              <input type="text" class="form-control" name="intitule" value="{{ missioncontrole.intitule }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Référence Produit</label>
+              <input type="text" class="form-control" name="reference" value="{{ missioncontrole.reference }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Statut</label>
+              <select class="form-select" name="statut">
+                <option value="True" {% if missioncontrole.statut %}selected{% endif %}>Actif</option>
+                <option value="False" {% if not missioncontrole.statut %}selected{% endif %}>Inactif</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Section</label>
+              <input type="text" class="form-control" name="section" value="{{ missioncontrole.section|default_if_none:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Client</label>
+              <input type="text" class="form-control" name="client" value="{{ missioncontrole.client|default_if_none:'' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Désignation</label>
+              <input type="text" class="form-control" name="designation" value="{{ missioncontrole.designation|default_if_none:'' }}">
+            </div>
+          </div>
+          
+          <!-- PDF Links Section -->
+          {% if missioncontrole.pdf_file %}
+          <div class="row mt-4">
+            <div class="col-12">
+              <div class="card card-light">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">PDF Généré</h5>
+                </div>
+                <div class="card-body p-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'Gamme:view_gamme_pdf' missioncontrole.id %}?no_toolbar=1" target="_blank" class="text-decoration-none">
+                      <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                      <span>GammePdf</span>
+                    </a>
+                    <small class="text-muted">Dernière modification</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          <!-- End PDF Links Section -->
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- Gamme -->
+    <div class="tab-pane fade" id="custom-tabs-four-profile" role="tabpanel">
+      <div class="card card-info card-outline mb-4">
+        <div class="card-header"><div class="card-title">Gammes Associées</div></div>
+        <div class="card-body">
+
+          {% if gammes %}
+          <div class="accordion" id="accordionGammes">
+            {% for gamme in gammes %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingGamme{{ forloop.counter }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGamme{{ forloop.counter }}">
+                  {{ gamme.intitule }} — Version {{ gamme.version }} — {% if gamme.statut %}✔️ Actif{% else %}❌ Inactif{% endif %}
+                </button>
+              </h2>
+              <div id="collapseGamme{{ forloop.counter }}" class="accordion-collapse collapse">
+                <div class="accordion-body">
+
+                  {% if forloop.first %}
+                  <div class="d-flex gap-2 mb-3">
+                    <a class="btn btn-sm btn-outline-warning toggle-buttons" data-bs-toggle="collapse" href="#formGamme{{ gamme.id }}" data-targets="formGamme{{ gamme.id }}">
+                      <i class="bi bi-pencil"></i> Modifier cette gamme
+                    </a>
+
+                    <a class="btn btn-sm btn-outline-primary toggle-buttons" data-bs-toggle="collapse" href="#operationsGamme{{ gamme.id }}" data-targets="operationsGamme{{ gamme.id }}">
+                      Modifier les opérations
+                    </a>
+
+                    <a class="btn btn-sm btn-outline-success toggle-buttons" data-bs-toggle="collapse" href="#addOperationGamme{{ gamme.id }}" data-gamme-id="{{ gamme.id }}">
+                      <i class="bi bi-plus-circle"></i> Ajouter opération
+                    </a>
+
+                    <a class="btn btn-sm btn-outline-info toggle-buttons" data-bs-toggle="collapse" href="#tableOperationsGamme{{ gamme.id }}" data-targets="tableOperationsGamme{{ gamme.id }}">
+                      Afficher les opérations
+                    </a>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#photoDefautModal{{ gamme.id }}">
+                      <i class="bi bi-camera"></i> ajouter des images de defaut
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#photoAcceptableModal{{ gamme.id }}">
+                      <i class="bi bi-camera"></i> ajouter des images acceptables
+                    </button>
+                    {% if gamme.validations.exists %}
+                      <button type="button" class="btn btn-sm btn-success" disabled>
+                        <i class="bi bi-check-circle-fill"></i> Validée le {{ gamme.validations.first.date_validation_user_ro|date:"d/m/Y H:i" }}
+                      </button>
+                    {% else %}
+                      {% if user.is_superuser or user.is_ro %}
+                      <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmValidationModal{{ gamme.id }}">
+                        <i class="bi bi-check-circle"></i> Valider
+                      </button>
+                      {% endif %}
+                    {% endif %}
+                    
+                    <!-- Confirmation Modal -->
+                    <div class="modal fade" id="confirmValidationModal{{ gamme.id }}" tabindex="-1" aria-labelledby="confirmValidationModalLabel{{ gamme.id }}" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title" id="confirmValidationModalLabel{{ gamme.id }}"><i class="bi bi-check-circle me-2"></i>Confirmer la validation</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                          </div>
+                          <div class="modal-body">
+                            <p>Vous êtes sur le point de valider définitivement la gamme :</p>
+                            <div class="card bg-light mb-3">
+                              <div class="card-body">
+                                <h6 class="card-title">{{ gamme.intitule }}</h6>
+                                <p class="card-text mb-0">
+                                  <small class="text-muted">
+                                    Version {{ gamme.version }}
+                                    {% if gamme.validations.exists %}
+                                      <br>Dernière validation : {{ gamme.validations.first.date_validation_user_ro|date:"d/m/Y H:i" }}
+                                    {% endif %}
+                                  </small>
+                                </p>
+                              </div>
+                            </div>
+                            <div class="alert alert-warning">
+                              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                              Cette action est irréversible. La gamme sera marquée comme validée.
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                              <i class="bi bi-x-circle me-1"></i> Annuler
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="validateGamme('{{ gamme.id }}')" id="confirmValidateBtn{{ gamme.id }}">
+                              <i class="bi bi-check-circle me-1"></i> Confirmer la validation
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+
+                  <!-- Modifier gamme -->
+                  <div class="collapse mb-3" id="formGamme{{ gamme.id }}">
+                    <div class="card card-light">
+                      <div class="card-body">
+                        <div class="mb-3">
+                          <label class="form-label">Intitulé</label>
+                          <input type="text" class="form-control" name="{{ gamme.id }}-intitule" value="{{ gamme.intitule }}">
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">No Incident</label>
+                          <input type="text" class="form-control" name="{{ gamme.id }}-No_incident" value="{{ gamme.No_incident }}">
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Statut</label>
+                          <select class="form-select" name="{{ gamme.id }}-statut">
+                            <option value="True" {% if gamme.statut %}selected{% endif %}>Actif</option>
+                            <option value="False" {% if not gamme.statut %}selected{% endif %}>Inactif</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Commentaire</label>
+                          <textarea name="{{ gamme.id }}-commentaire" class="form-control">{{ gamme.commantaire|default:'' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Temps alloué</label>
+                          <input type="number" name="{{ gamme.id }}-temps_alloue" class="form-control" value="{{ gamme.Temps_alloué|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Identification de carton et  emballage</label>
+                          <textarea name="{{ gamme.id }}-commentaire_identification" class="form-control">{{ gamme.commantaire_identification|default:'' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Identification de non conforme</label>
+                          <textarea name="{{ gamme.id }}-commentaire_non_conforme" class="form-control">{{ gamme.commantaire_traitement_non_conforme|default:'' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Photo traitement non conforme</label>
+                          <input type="file" name="{{ gamme.id }}-photo_non_conforme" class="form-control">
+                          {% if gamme.photo_traitement_non_conforme %}
+                            <div class="mt-2">
+                              <span>Photo actuelle : </span>
+                              <a href="{{ gamme.photo_traitement_non_conforme.url }}" target="_blank">
+                                <img src="{{ gamme.photo_traitement_non_conforme.url }}" alt="Photo non conforme" style="max-height: 100px;">
+                              </a>
+                            </div>
+                          {% endif %}
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Picto</label>
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="{{ gamme.id }}-picto_s" id="pictoS{{ gamme.id }}" {% if gamme.picto_s %}checked{% endif %}>
+                            <label class="form-check-label" for="pictoS{{ gamme.id }}">S</label>
+                          </div>
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="{{ gamme.id }}-picto_r" id="pictoR{{ gamme.id }}" {% if gamme.picto_r %}checked{% endif %}>
+                            <label class="form-check-label" for="pictoR{{ gamme.id }}">R</label>
+                          </div>
+                        </div>
+
+                        <!-- Tables Container -->
+                        <div class="row mb-3">
+                          <!-- EPI Table -->
+                          <div class="col-md-6 mb-3 mb-md-0">
+                            <h6>Équipements de Protection Individuelle (EPI)</h6>
+                            <div class="table-responsive">
+                              <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                  <tr>
+                                    <th>Sélectionner</th>
+                                    <th>Équipement</th>
+                                    <th>Image</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% if epis %}
+                                    {% for epi_item in epis %}
+                                    <tr>
+                                      <td class="align-middle" style="width: 50px; text-align: center;">
+                                        <input type="checkbox" 
+                                               name="gamme_{{ gamme.id }}_epi_{{ epi_item.id }}" 
+                                               value="on"
+                                               class="form-check-input"
+                                               {% if epi_item in gamme.epis.all %}checked{% endif %}>
+                                      </td>
+                                      <td class="align-middle">
+                                        {{ epi_item.nom }}
+                                      </td>
+                                      <td class="align-middle" style="width: 100px;">
+                                        {% if epi_item.photo %}
+                                        <img src="{{ epi_item.photo.url }}" alt="{{ epi_item.nom }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px;">
+                                        {% else %}
+                                        <span class="text-muted">Aucune image</span>
+                                        {% endif %}
+                                      </td>
+                                    </tr>
+                                    {% endfor %}
+                                  {% else %}
+                                    <tr>
+                                      <td colspan="3" class="text-center">Aucun EPI n'a été enregistré.</td>
+                                    </tr>
+                                  {% endif %}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          <!-- Moyens de contrôle Table -->
+                          <div class="col-md-6">
+                            <h6>Moyens de contrôle</h6>
+                            <div class="table-responsive">
+                              <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                  <tr>
+                                    <th>Sélectionner</th>
+                                    <th>Moyen de contrôle</th>
+                                    <th>Image</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% if moyens_controle %}
+                                    {% for moyen in moyens_controle %}
+                                    <tr>
+                                      <td class="align-middle" style="width: 50px; text-align: center;">
+                                        <input type="checkbox" 
+                                               name="gamme_{{ gamme.id }}_moyen_controle_{{ moyen.id }}" 
+                                               value="on"
+                                               class="form-check-input"
+                                               {% if moyen in gamme.moyens_controle.all %}checked{% endif %}>
+                                      </td>
+                                      <td class="align-middle">
+                                        {{ moyen.nom }}
+                                      </td>
+                                      <td class="align-middle" style="width: 100px;">
+                                        {% if moyen.photo %}
+                                        <img src="{{ moyen.photo.url }}" alt="{{ moyen.nom }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px;">
+                                        {% else %}
+                                        <span class="text-muted">Aucune image</span>
+                                        {% endif %}
+                                      </td>
+                                    </tr>
+                                    {% endfor %}
+                                  {% else %}
+                                    <tr>
+                                      <td colspan="3" class="text-center">Aucun moyen de contrôle n'a été enregistré.</td>
+                                    </tr>
+                                  {% endif %}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  
+                  
+                  <!-- Table des opérations -->
+                  <div class="collapse mb-3" id="operationsGamme{{ gamme.id }}">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-bordered align-middle text-center">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width: 15%;">Titre</th>
+                            <th style="width: 5%;">Ordre</th>
+                            <th style="width: 15%;">Description</th>
+                            <th style="width: 15%;">Critères</th>
+                            <th style="width: 10%;">Fréquence</th>
+                            <th style="width: 10%;">Moyen de contrôle </th>
+                            <th style="width: 15%;">Moyens de Contrôle</th>
+                            <th style="width: 20%;">Photos</th>
+                            <th style="width: 20%;">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for op in gamme.operations.all %}
+                            {% if op.gamme_id == gamme.id %}
+                            <tr data-op-id="{{ op.id }}">
+                              <td>
+                                <input type="text" class="form-control form-control-sm" name="{{ op.id }}-titre" value="{{ op.titre }}">
+                              </td>
+                              <td>
+                                <input type="number" class="form-control form-control-sm" name="{{ op.id }}-ordre" value="{{ op.ordre }}">
+                              </td>
+                              <td>
+                                <textarea class="form-control form-control-sm" rows="2" name="{{ op.id }}-description">{{ op.description }}</textarea>
+                              </td>
+                              <td>
+                                <textarea class="form-control form-control-sm" rows="2" name="{{ op.id }}-criteres">{{ op.criteres }}</textarea>
+                              </td>
+                              <td>
+                                <input type="text" class="form-control form-control-sm" name="{{ op.id }}-frequence" value="{{ op.frequence|default:'' }}">
+                              </td>
+                              <td>
+                                <input type="text" class="form-control form-control-sm" name="{{ op.id }}-moyen_controle" value="{{ op.moyen_controle|default:'' }}" placeholder="Entrez le moyen de contrôle">
+                              </td>
+                              <td>
+                                <div class="moyens-controle-container">
+                                  {% for moyen in moyens_controle %}
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input moyen-checkbox" type="checkbox" 
+                                                   name="{{ op.id }}-moyenscontrole" 
+                                                   value="{{ moyen.id }}"
+                                                   id="op{{ op.id }}_moyen{{ moyen.id }}"
+                                                   data-op-id="{{ op.id }}"
+                                                   data-moyen-id="{{ moyen.id }}"
+                                                   {% for mc in op.moyenscontrole.all %}{% if mc.id == moyen.id %}checked{% endif %}{% endfor %}>
+                                    <label class="form-check-label" for="op{{ op.id }}_moyen{{ moyen.id }}" title="{{ moyen.nom }}">
+                                      {% if moyen.photo %}
+                                        <img src="{{ moyen.photo.url }}" alt="{{ moyen.nom }}" style="max-height: 50px; max-width: 100%;">
+                                      
+                                      {% endif %}
+                                    </label>
+                                  </div>
+                                  {% endfor %}
+                                </div>
+                              </td>
+                              <td>
+                                <div class="photo-forms-container d-flex flex-wrap gap-2 justify-content-center">
+                                  {% for photo in op.photooperation_set.all %}
+                                  <div class="photo-cell" id="photoCell-{{ photo.id }}">
+                                    <img src="{{ photo.image.url }}" class="operation-photo" alt="Photo de l'opération" onclick="zoomPhoto(this)">
+                                    <div class="photo-description">
+                                      <input type="text" class="form-control form-control-sm" name="photo_{{ photo.id }}_description" value="{{ photo.description }}">
+                                    </div>
+                                    <button type="button" class="photo-delete-btn" onclick="markPhotoDelete('{{ photo.id }}', this)">
+                                      <i class="bi bi-x-lg"></i>
+                                    </button>
+                                  </div>
+                                  {% endfor %}
+                                  <div id="newPhotoFormsContainer-{{ op.id }}"></div>
+                                  <button type="button" class="photo-add-btn" onclick="addNewPhotoForm('{{ op.id }}')" id="addPhotoBtn{{ op.id }}">
+                                    <i class="bi bi-plus-lg"></i>
+                                  </button>
+                                </div>
+                              </td>
+                              <td class="text-nowrap">
+                                <button type="button" class="btn btn-outline-danger btn-sm mb-2" onclick="removeOperation('{{ op.id }}', event)">
+                                  <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                                
+                              </td>
+                            </tr>
+                            <!-- Moyens de contrôle row -->
+                          
+                            {% endif %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                      
+                    </div>
+                  </div>
+
+                  <!-- Ajouter opération (formulaire) -->
+                  <div class="collapse mb-3" id="addOperationGamme{{ gamme.id }}">
+                    <div class="card card-light mb-3 operation-form" id="newOpForm-{{ gamme.id }}-0" style="display: none;">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                          <h6 class="card-title">Nouvelle opération</h6>
+                          <button type="button" class="btn-close" onclick="removeOperationForm(this)"></button>
+                        </div>
+                        <div class="d-flex flex-column gap-3">
+                          <div>
+                            <label class="form-label">Titre</label>
+                            <input type="text" class="form-control" name="newop_{{ gamme.id }}_0_titre">
+                          </div>
+                          <div>
+                            <label class="form-label">Ordre</label>
+                            <input type="number" class="form-control" name="newop_{{ gamme.id }}_0_ordre" value="{{ gamme.next_order }}" min="1">
+                          </div>
+                          <div>
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" name="newop_{{ gamme.id }}_0_description"></textarea>
+                          </div>
+                          <div></div>
+                          <div>
+                            <label class="form-label">Critères</label>
+                            <textarea class="form-control" rows="3" name="newop_{{ gamme.id }}_0_criteres"></textarea>
+                          </div>
+                          <div>
+                            <label>Moyen de contrôle</label>
+                            <input type="text" class="form-control mb-2" name="newop_{{ gamme.id }}_0_moyen_controle">
+                            
+                            <div class="moyens-controle-container border p-2 rounded">
+                              <label>Moyens de contrôle</label>
+                              <div class="row g-2">
+                                {% for moyen in moyens_controle %}
+                                <div class="col-6 col-sm-4 col-md-3">
+                                  <div class="form-check p-2 border rounded">
+                                    <input class="form-check-input moyen-checkbox" type="checkbox" 
+                                           name="newop_{{ gamme.id }}_0_moyens_controle" 
+                                           value="{{ moyen.id }}" 
+                                           id="newop_{{ gamme.id }}_0_moyen_{{ moyen.id }}">
+                                    <label class="form-check-label d-flex flex-column align-items-center w-100" for="newop_{{ gamme.id }}_0_moyen_{{ moyen.id }}">
+                                      {% if moyen.photo %}
+                                        <img src="{{ moyen.photo.url }}" alt="{{ moyen.nom }}" class="img-fluid mb-1" style="max-height: 60px; width: auto;">
+                                      {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center mb-1" style="width: 80px; height: 60px;">
+                                          <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                      {% endif %}
+                                      <small class="text-center">{{ moyen.nom }}</small>
+                                    </label>
+                                  </div>
+                                </div>
+                                {% endfor %}
+                              </div>
+                            </div>
+                            <input type="hidden" name="newop_{{ gamme.id }}_0_moyen_controle_hidden" id="newop_{{ gamme.id }}_0_moyen_controle_hidden">
+
+                          </div>
+                          <div>
+                            <label class="form-label">Fréquence</label>
+                            <input type="number" class="form-control" name="newop_{{ gamme.id }}_0_frequence">
+                          </div>
+                          
+                        </div>
+
+                        <!-- Container new photos for this new op -->
+                        <div class="photo-forms-container" id="newOpPhotoFormsContainer-{{ gamme.id }}_0"></div>
+
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-3" 
+                                onclick="event.stopPropagation(); addNewOpPhotoForm('{{ gamme.id }}', 0, event)" 
+                                id="addNewOpPhotoBtn{{ gamme.id }}_0">
+                          <i class="bi bi-camera"></i> Ajouter une photo
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-3 ms-2" 
+                                onclick="addAnotherOperationForm('{{ gamme.id }}')">
+                          <i class="bi bi-plus-circle"></i> Ajouter une autre opération
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Table opérations -->
+                  <div class="collapse" id="tableOperationsGamme{{ gamme.id }}">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width: 70px;">Ordre</th>
+                            <th>Titre</th>
+                            <th>Description</th>
+                            <th>Critères</th>
+                            <th>Les Moyens de contrôles</th>
+                            <th>Fréquence</th>
+                            <th>Moyen de contrôle</th>
+                            <th>Photos</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for op in gamme.operations.all %}
+                          <tr>
+                            <td class="text-center">
+                              {{ op.ordre|default:'-' }}
+                            </td>
+                            <td>{{ op.titre }}</td>
+                            <td>{{ op.description }}</td>
+                            <td>{{ op.criteres }}</td>
+                            <td>
+                                {% if op.moyenscontrole.all %}
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for moyen in op.moyenscontrole.all %}
+                                            <img src="{{ moyen.photo.url }}" alt="{{ moyen.nom }}" class="img-thumbnail" style="max-width: 30px; max-height: 30px;" title="{{ moyen.nom }}">
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ op.frequence }}</td>
+                            <td>
+                              {% if op.moyen_controle %}
+                                {{ op.moyen_controle }}
+                              {% else %}
+                                <span class="text-muted">Aucun moyen de contrôle</span>
+                              {% endif %}
+                            </td>
+                            <td>
+                              {% if op.photooperation_set.all %}
+                                <div class="d-flex flex-wrap gap-2">
+                                  {% for photo in op.photooperation_set.all %}
+                                    <div class="position-relative" style="width: 60px; height: 60px;">
+                                      <img src="{{ photo.image.url }}" class="img-thumbnail w-100 h-100 object-fit-cover" onclick="zoomPhoto(this)" alt="Photo opération" style="cursor: pointer;">
+                                      {% if photo.description %}
+                                        <div class="photo-description small text-muted mt-1">{{ photo.description|truncatechars:20 }}</div>
+                                      {% endif %}
+                                    </div>
+                                  {% endfor %}
+                                </div>
+                              {% else %}
+                                <span class="text-muted">Aucune photo</span>
+                              {% endif %}
+                            </td>
+                          </tr>
+                          
+                          {% empty %}
+                          <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                              <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                              Aucune opération n'a été ajoutée à cette gamme.
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {% else %}
+                  <!-- Inactive gammes: show afficher les opérations button -->
+                  <div class="d-flex gap-2 mb-3">
+                    <a class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" href="#tableOperationsGamme{{ gamme.id }}">
+                      Afficher les opérations
+                    </a>
+                  </div>
+                  <div class="collapse" id="tableOperationsGamme{{ gamme.id }}">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Titre</th>
+                            <th>Ordre</th>
+                            <th>Description</th>
+                            <th>Critères</th>
+                            <th>Fréquence</th>
+                            <th>Moyen de contrôle</th>
+                            <th>Photos</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% if gamme.operations.exists %}
+                            {% with operations=gamme.operations.all|dictsort:"ordre" %}
+                              {% for op in operations %}
+                              <tr>
+                                <td>{{ op.titre }}</td>
+                                <td>{{ op.ordre }}</td>
+                                <td>{{ op.description|default:"-"|linebreaksbr }}</td>
+                                <td>{{ op.criteres|default:"-"|linebreaksbr }}</td>
+                                <td>{{ op.frequence|default:"-" }}</td>
+                                <td>
+                                  {% if op.moyen_controle %}
+                                    {{ op.moyen_controle }}
+                                  {% else %}
+                                    <span class="text-muted">Aucun moyen de contrôle</span>
+                                  {% endif %}
+                                </td>
+                                <td>
+                                  {% if op.photooperation_set.exists %}
+                                    <div class="d-flex flex-wrap gap-2">
+                                      {% for photo in op.photooperation_set.all %}
+                                        <div class="position-relative" style="width: 40px; height: 40px;">
+                                          <img src="{{ photo.image.url }}" 
+                                               class="img-thumbnail w-100 h-100 object-fit-cover" 
+                                               onclick="zoomPhoto(this)" 
+                                               alt="Photo opération" 
+                                               style="cursor: pointer;">
+                                        </div>
+                                      {% endfor %}
+                                    </div>
+                                  {% else %}
+                                    <span class="text-muted">Aucune photo</span>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                              {% endfor %}
+                            {% endwith %}
+                          {% else %}
+                            <tr>
+                              <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Aucune opération n'a été ajoutée à cette gamme.
+                              </td>
+                            </tr>
+                          {% endif %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {% endif %}
+
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center">
+            <p class="text-muted">Aucune gamme associée.</p>
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#newGammeForm">
+              <i class="bi bi-plus-circle"></i> Ajouter une nouvelle gamme
+            </button>
+          </div>
+          {% endif %}
+
+          <!-- Nouvelle gamme -->
+          <div class="collapse mt-4" id="newGammeForm">
+            <h5>Nouvelle Gamme</h5>
+            <div class="mb-3">
+              <label class="form-label">Intitulé</label>
+              <input type="text" class="form-control" name="gamme_intitule" id="gamme_intitule_input">
+            </div>
+            <script>
+              // Set default value for gamme_intitule when the new gamme form is shown
+              document.getElementById('newGammeForm').addEventListener('shown.bs.collapse', function() {
+                // Get the mission's intitulé from the mission form input
+                const missionIntitule = document.querySelector('input[name="intitule"]')?.value || '';
+                const gammeIntituleInput = document.getElementById('gamme_intitule_input');
+                
+                // Only set the default value if the input is empty
+                if (gammeIntituleInput && !gammeIntituleInput.value) {
+                  gammeIntituleInput.value = `Gamme de contrôle: ${missionIntitule}`;
+                }
+              });
+            </script>
+            <!-- Version is handled in the backend with a default value of 1.0 -->
+            <div class="mb-3">
+              <label class="form-label">No Incident</label>
+              <input type="text" class="form-control" name="gamme_No_incident">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Statut</label>
+              <select class="form-select" name="gamme_statut">
+                <option value="True">Actif</option>
+                <option value="False">Inactif</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Commentaire</label>
+              <textarea class="form-control" name="gamme_commantaire"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Temps alloué</label>
+              <input type="number" class="form-control" name="gamme_Temps_alloue">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Identification de carton et emballage</label>
+              <textarea class="form-control" name="gamme_commantaire_identification"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Identification de non conforme</label>
+              <textarea class="form-control" name="gamme_commantaire_traitement_non_conforme"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Photo traitement non conforme</label>
+              <input type="file" class="form-control" name="gamme_photo_traitement_non_conforme">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Picto</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="gamme_picto_s" value="true" id="pictoS">
+                <label class="form-check-label" for="pictoS">S</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="gamme_picto_r" value="true" id="pictoR" checked>
+                <label class="form-check-label" for="pictoR">R</label>
+              </div>
+              <!-- Hidden input to store combined picto value -->
+              <input type="hidden" name="gamme_picto_combined" id="gamme_picto_combined" value="R">
+              <script>
+                // Update combined picto value when checkboxes change
+                document.addEventListener('DOMContentLoaded', function() {
+                  const pictoS = document.getElementById('pictoS');
+                  const pictoR = document.getElementById('pictoR');
+                  const combinedInput = document.getElementById('gamme_picto_combined');
+                  
+                  function updatePictoValue() {
+                    let value = '';
+                    if (pictoS.checked) value += 'S';
+                    if (pictoR.checked) value += 'R';
+                    if (!value) {
+                      // Default to R if none checked
+                      pictoR.checked = true;
+                      value = 'R';
+                    }
+                    combinedInput.value = value;
+                  }
+                  
+                  pictoS.addEventListener('change', updatePictoValue);
+                  pictoR.addEventListener('change', updatePictoValue);
+                });
+              </script>
+            </div>
+            
+            <!-- Moyens de contrôle et EPI -->
+            <div class="row mb-3">
+              <!-- EPI Table -->
+              <div class="col-md-6 mb-3 mb-md-0">
+                <h6>Équipements de Protection Individuelle (EPI)</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Sélectionner</th>
+                        <th>Équipement</th>
+                        <th>Image</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if epis %}
+                        {% for epi_item in epis %}
+                        <tr>
+                          <td class="align-middle" style="width: 50px; text-align: center;">
+                            <input type="checkbox" 
+                                   name="gamme_epi_{{ epi_item.id }}" 
+                                   class="form-check-input" 
+                                   value="{{ epi_item.id }}">
+                          </td>
+                          <td class="align-middle">
+                            {{ epi_item.nom }}
+                          </td>
+                          <td class="align-middle" style="width: 100px;">
+                            {% if epi_item.photo %}
+                            <img src="{{ epi_item.photo.url }}" alt="{{ epi_item.nom }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px;">
+                            {% else %}
+                            <span class="text-muted">Aucune image</span>
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      {% else %}
+                        <tr>
+                          <td colspan="3" class="text-center">Aucun EPI n'a été enregistré.</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <!-- Moyens de contrôle -->
+              <div class="col-md-6">
+                <h6>Moyens de contrôle</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Sélectionner</th>
+                        <th>Moyen de contrôle</th>
+                        <th>Image</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if moyens_controle %}
+                        {% for moyen in moyens_controle %}
+                        <tr>
+                          <td class="align-middle" style="width: 50px; text-align: center;">
+                            <input type="checkbox" 
+                                   name="gamme_moyen_controle_{{ moyen.id }}" 
+                                   class="form-check-input moyen-checkbox" 
+                                   value="{{ moyen.id }}">
+                          </td>
+                          <td class="align-middle">
+                            {{ moyen.nom }}
+                          </td>
+                          <td class="align-middle" style="width: 100px;">
+                            {% if moyen.photo %}
+                            <img src="{{ moyen.photo.url }}" alt="{{ moyen.nom }}" class="img-thumbnail" style="max-width: 80px; max-height: 60px;">
+                            {% else %}
+                            <span class="text-muted">Aucune image</span>
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      {% else %}
+                        <tr>
+                          <td colspan="3" class="text-center">Aucun moyen de contrôle n'a été enregistré.</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {{ operation_formset.management_form }}
+            <div id="operation-forms-container">
+              {% for form in operation_formset %}
+              <div class="card card-light mb-3 operation-form" id="newOpForm-{{ forloop.counter0 }}">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="card-title">Opération</h6>
+                    <button type="button" class="btn-close" onclick="removeOperationForm(this)"></button>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Titre</label>
+                      {{ form.titre }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Ordre</label>
+                      {{ form.ordre }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Description</label>
+                      {{ form.description }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Critères</label>
+                      {{ form.criteres }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label>Moyens de contrôle</label>
+                      {{ form.moyen_controle }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label>Fréquence</label>
+                      {{ form.frequence }}
+                    </div>
+                    
+                  </div>
+
+                  <!-- Container new photos for this new form op -->
+                  <div class="photo-forms-container" id="newOpPhotoFormsContainerForm{{ forloop.counter0 }}"></div>
+
+                  <button type="button" class="btn btn-outline-secondary btn-sm mt-3" 
+                          onclick="event.stopPropagation(); addNewOpPhotoFormForForm('{{ forloop.counter0 }}', event);" 
+                          id="addNewOpPhotoBtnForm{{ forloop.counter0 }}">
+                    <i class="bi bi-camera"></i> Ajouter une photo
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="btn btn-outline-primary" onclick="addOperationForm()">
+              Ajouter une opération
+            </button>
+          </div>
+
+        </div>
+
+        <div class="card-footer d-flex justify-content-end gap-2">
+          <a href="{% url 'Gamme:missioncontrole_list' %}" class="btn btn-secondary">Annuler</a>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- Photo Defaut Modal -->
+{% for gamme in gammes %}
+<div class="modal fade" id="photoDefautModal{{ gamme.id }}" tabindex="-1" aria-labelledby="photoDefautModalLabel{{ gamme.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="photoDefautModalLabel{{ gamme.id }}">Ajouter des photos de défaut - {{ gamme.intitule }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="photoDefautForm{{ gamme.id }}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="gamme_id" value="{{ gamme.id }}">
+          
+          <div class="mb-3">
+            <label for="photos" class="form-label">Sélectionner des photos</label>
+            <input class="form-control" type="file" id="photos{{ gamme.id }}" name="photos" multiple accept="image/*" required>
+            <div class="form-text">Sélectionnez une ou plusieurs images à télécharger.</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="description" class="form-label">Description (optionnelle)</label>
+            <input type="text" class="form-control" id="description{{ gamme.id }}" name="description" placeholder="Description des défauts">
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div id="uploadStatus{{ gamme.id }}" class="text-muted"></div>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload"></i> Télécharger
+            </button>
+          </div>
+        </form>
+        
+        <hr>
+        
+        <h6>Photos existantes</h6>
+        <div id="existingPhotos{{ gamme.id }}" class="row g-2">
+          {% for photo in gamme.photo_defauts %}
+          <div class="col-md-3 col-6">
+            <div class="card h-100">
+              <div class="position-relative" style="height: 120px; overflow: hidden;">
+                <img src="{{ photo.image.url }}" class="card-img-top h-100 w-100" alt="{{ photo.description }}" style="object-fit: cover; cursor: pointer;" onclick="zoomPhoto(this)">
+                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                        onclick="event.stopPropagation(); deletePhotoDefaut('{{ photo.id }}', this)" 
+                        title="Supprimer"
+                        data-photo-id="{{ photo.id }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+              <div class="card-body p-2">
+                <p class="card-text small text-muted mb-0">
+                  <i class="bi bi-calendar3 me-1"></i> {{ photo.date_ajout|date:"d/m/Y H:i" }}
+                </p>
+                {% if photo.description %}
+                <p class="card-text small mb-0 mt-1">{{ photo.description }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <div class="text-center p-4 border rounded bg-light">
+              <i class="bi bi-images fs-1 text-muted mb-2"></i>
+              <p class="text-muted mb-0">Aucune photo de défaut pour l'instant.</p>
+              <p class="small text-muted mt-2">Utilisez le formulaire ci-dessus pour ajouter des photos.</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Modal for adding acceptable limit photos -->
+{% for gamme in gammes %}
+<div class="modal fade" id="photoAcceptableModal{{ gamme.id }}" tabindex="-1" aria-labelledby="photoAcceptableModalLabel{{ gamme.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="photoAcceptableModalLabel{{ gamme.id }}">Ajouter des photos de limites acceptables - {{ gamme.intitule }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="photoAcceptableForm{{ gamme.id }}" enctype="multipart/form-data" data-gamme-id="{{ gamme.id }}">
+          {% csrf_token %}
+          <input type="hidden" name="gamme_id" value="{{ gamme.id }}">
+          
+          <div class="mb-3">
+            <label for="photos" class="form-label">Sélectionner des photos</label>
+            <input class="form-control" type="file" id="photos{{ gamme.id }}" name="photos" multiple accept="image/*" required>
+            <div class="form-text">Sélectionnez une ou plusieurs images à télécharger.</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="description" class="form-label">Description (optionnelle)</label>
+            <input type="text" class="form-control" id="description{{ gamme.id }}" name="description" placeholder="Description des limites acceptables">
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div id="uploadAcceptableStatus{{ gamme.id }}" class="text-muted"></div>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload"></i> Télécharger
+            </button>
+          </div>
+        </form>
+        
+        <hr>
+        
+        <h6>Photos existantes</h6>
+        <div id="existingAcceptablePhotos{{ gamme.id }}" class="row g-2">
+          {% for photo in gamme.limiteacceptable_photos.all %}
+          <div class="col-md-3 col-6">
+            <div class="card h-100">
+              <div class="position-relative" style="height: 120px; overflow: hidden;">
+                <img src="{{ photo.image.url }}" class="card-img-top h-100 w-100" alt="{{ photo.description }}" style="object-fit: cover; cursor: pointer;" onclick="zoomPhoto(this)">
+                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                        onclick="event.stopPropagation(); deletePhotoAcceptable('{{ photo.id }}', this)" 
+                        title="Supprimer"
+                        data-photo-id="{{ photo.id }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+              <div class="card-body p-2">
+                <p class="card-text small text-muted mb-0">
+                  <i class="bi bi-calendar3 me-1"></i> {{ photo.date_ajout|date:"d/m/Y H:i" }}
+                </p>
+                {% if photo.description %}
+                <p class="card-text small mb-0 mt-1">{{ photo.description }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12">
+            <div class="text-center p-4 border rounded bg-light">
+              <i class="bi bi-images fs-1 text-muted mb-2"></i>
+              <p class="text-muted mb-0">Aucune photo de limite acceptable pour l'instant.</p>
+              <p class="small text-muted mt-2">Utilisez le formulaire ci-dessus pour ajouter des photos.</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Zoom overlay -->
+<div class="zoom-overlay" id="photoZoom" role="dialog" aria-modal="true" aria-labelledby="zoomedImage">
+  <button class="zoom-close-btn" aria-label="Close zoom" onclick="closeZoom()">×</button>
+  <img src="" class="zoom-image" id="zoomedImage" alt="Photo agrandie">
+  <div class="zoom-description"></div>
+</div>
+
+<script>
+  let photoCount = {};
+  let newOpCount = 1; // for new ops in new gamme form
+  let newOpPhotoCount = {};
+
+  // Remove operation function - Direct deletion with AJAX
+  function removeOperation(opId, event) {
+    event.preventDefault(); // Prevent default form submission
+    event.stopPropagation(); // Stop event bubbling
+    
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette opération ?')) {
+      return;
+    }
+    
+    const url = `/gamme/operationcontrole/${opId}/delete/`;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    const deleteButton = event.target.closest('button');
+    const originalText = deleteButton.innerHTML;
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = '<i class="bi bi-hourglass"></i>';
+
+    const row = deleteButton.closest('tr');
+    row.style.opacity = '0.5';
+    row.style.transition = 'opacity 0.3s ease-out';
+
+    // Send the delete request with AJAX
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Requested-With': 'XMLHttpRequest'  // This header tells Django it's an AJAX request
+      },
+      // We don't need to send any data, just the CSRF token
+    })
+    .then(response => {
+      // Don't try to parse JSON, just check if the request was successful
+      if (response.ok) {
+        // If successful, remove the row
+        row.style.opacity = '0';
+        setTimeout(() => {
+          row.remove();
+          // Update row numbers if needed
+          const table = document.querySelector('table');
+          if (table) {
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+              const numberCell = row.querySelector('td:first-child');
+              if (numberCell) {
+                numberCell.textContent = index + 1;
+              }
+            });
+          }
+        }, 300);
+      } else {
+        // If not successful, show error
+        throw new Error('Server returned an error');
+      }
+    })
+    
+  }
+
+  // Add new photo input for existing operation
+  function addNewPhotoForm(opId) {
+    const container = document.getElementById(`newPhotoFormsContainer-${opId}`);
+    if (!container) return;
+    
+    const photoIndex = container.querySelectorAll('.photo-form-group').length;
+    const formGroup = document.createElement('div');
+    formGroup.className = 'photo-form-group mb-2';
+    formGroup.innerHTML = `
+      <div class="input-group">
+        <input type="file" class="form-control form-control-sm" 
+               name="form-${opId}-photo-${photoIndex}-image" accept="image/*" required>
+        <input type="text" class="form-control form-control-sm" 
+               name="form-${opId}-photo-${photoIndex}-description" 
+               placeholder="Description (optionnelle)">
+        <button type="button" class="btn btn-outline-danger btn-sm" 
+                onclick="this.closest('.photo-form-group').remove(); updatePhotoCounter('${opId}');">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(formGroup);
+    updatePhotoCounter(opId);
+  }
+
+  // Add new photo input for new operation in gamme add form
+  function addNewOpPhotoForm(gammeId, opIndex, event) {
+    // Prevent multiple triggers
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Log the container we're trying to find
+    const containerId = `newOpPhotoFormsContainer-${gammeId}_${opIndex}`;
+    console.log('Looking for container:', containerId);
+    
+    // Find the container using the closest operation form to the clicked button
+    let container;
+    if (event && event.target) {
+      const operationForm = event.target.closest('.operation-form');
+      if (operationForm) {
+        container = operationForm.querySelector(`#${containerId}`);
+      }
+    }
+    
+    // Fallback to direct ID lookup if not found through DOM traversal
+    if (!container) {
+      container = document.getElementById(containerId);
+    }
+    
+    if (!container) {
+      console.error('Container not found:', containerId);
+      console.log('Available containers:', 
+        Array.from(document.querySelectorAll('[id^="newOpPhotoFormsContainer-"]')).map(el => el.id)
+      );
+      return;
+    }
+    
+    // Count existing photos in this container
+    const photoCount = container.querySelectorAll('.photo-form-group').length;
+    if (photoCount >= 5) {
+      alert('Maximum de 5 photos par opération atteint');
+      return;
+    }
+    
+    // Create form group
+    const formGroup = document.createElement('div');
+    formGroup.className = 'photo-form-group mb-2';
+    
+    // Create the file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.className = 'form-control form-control-sm';
+    fileInput.name = `newop_${gammeId}_${opIndex}_photo_${photoCount}_image`;
+    fileInput.accept = 'image/*';
+    fileInput.required = false;
+    
+    // Create description input
+    const descInput = document.createElement('input');
+    descInput.type = 'text';
+    descInput.className = 'form-control form-control-sm';
+    descInput.name = `newop_${gammeId}_${opIndex}_photo_${photoCount}_description`;
+    descInput.placeholder = 'Description (optionnelle)';
+    
+    // Create remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn btn-outline-danger btn-sm';
+    removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+    removeBtn.onclick = function() {
+      formGroup.remove();
+      updatePhotoCounters();
+    };
+    
+    // Create input group
+    const inputGroup = document.createElement('div');
+    inputGroup.className = 'input-group';
+    
+    // Append elements
+    inputGroup.appendChild(fileInput);
+    inputGroup.appendChild(descInput);
+    inputGroup.appendChild(removeBtn);
+    formGroup.appendChild(inputGroup);
+    
+    // Add the form group to the container
+    container.appendChild(formGroup);
+    
+    // Update photo counters
+    updatePhotoCounters();
+    
+    // Debug log
+    console.log(`Added photo input to container ${containerId}, total photos: ${photoCount + 1}`);
+    
+    return false;
+  }
+
+  // Add new photo input for operation formset in new gamme form
+  function addNewOpPhotoFormForForm(opIndex, event) {
+    // Prevent multiple triggers
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    const container = document.getElementById(`newOpPhotoFormsContainerForm${opIndex}`);
+    if (!container) return;
+
+    // Count existing photos
+    const photoCount = container.querySelectorAll('.photo-form-group').length;
+    if (photoCount >= 5) {
+      alert('Maximum de 5 photos par opération atteint');
+      return;
+    }
+
+    const formGroup = document.createElement('div');
+    formGroup.className = 'photo-form-group mb-2';
+    formGroup.innerHTML = `
+      <div class="input-group">
+        <input type="file" class="form-control form-control-sm" 
+               name="form-${opIndex}-photo-${photoCount}-image" accept="image/*" required>
+        <input type="text" class="form-control form-control-sm" 
+               name="form-${opIndex}-photo-${photoCount}-description" 
+               placeholder="Description (optionnelle)">
+        <button type="button" class="btn btn-outline-danger btn-sm" 
+                onclick="this.closest('.photo-form-group').remove(); updatePhotoCounters();">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(formGroup);
+    updatePhotoCounters();
+    
+    // Return false to prevent default behavior
+    return false;
+  }
+
+  // Remove operation form (new only)
+  function removeOperationForm(btn) {
+    const card = btn.closest('.operation-form');
+    if(card){
+      card.remove();
+    }
+  }
+
+  // Handle toggle buttons behavior
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add click event to all toggle buttons
+    document.querySelectorAll('.toggle-buttons').forEach(button => {
+      button.addEventListener('click', function(e) {
+        // Get the target ID from the href attribute
+        const targetId = this.getAttribute('href').substring(1);
+        const gammeId = this.getAttribute('data-gamme-id') || targetId.match(/\d+/)[0];
+        
+        // Find all collapsible elements in the same gamme section
+        const gammeSection = this.closest('.accordion-body');
+        const allCollapsibles = gammeSection.querySelectorAll('.collapse');
+        
+        // If clicking the currently active button, don't do anything (let Bootstrap handle the toggle)
+        const targetElement = document.getElementById(targetId);
+        if (targetElement && targetElement.classList.contains('show')) {
+          // If this is the 'Add Operation' button and it's already open, initialize the form
+          if (targetId.startsWith('addOperationGamme')) {
+            showAddOperationForm(gammeId);
+          }
+          return;
+        }
+        
+        // Close all collapsibles
+        allCollapsibles.forEach(collapse => {
+          if (collapse.id !== targetId && collapse.classList.contains('show')) {
+            const collapseInstance = bootstrap.Collapse.getInstance(collapse);
+            if (collapseInstance) {
+              collapseInstance.hide();
+            }
+          }
+        });
+        
+        // If this is the 'Add Operation' button, initialize the form
+        if (targetId.startsWith('addOperationGamme')) {
+          // Use a small timeout to ensure the collapse animation completes
+          setTimeout(() => {
+            showAddOperationForm(gammeId);
+          }, 50);
+        }
+      });
+    });
+    
+    // Listen for when a collapsible is shown to update button states
+    document.querySelectorAll('.collapse').forEach(collapse => {
+      collapse.addEventListener('show.bs.collapse', function(e) {
+        const gammeId = this.id.replace(/\D+/g, '');
+        if (gammeId) {
+          // Remove active class from all toggle buttons for this gamme
+          document.querySelectorAll(`[data-targets*="${gammeId}"]`).forEach(btn => {
+            btn.classList.remove('active');
+          });
+          
+          // Add active class to the clicked button
+          const activeButton = document.querySelector(`[href="#${this.id}"]`);
+          if (activeButton) {
+            activeButton.classList.add('active');
+          }
+        }
+      });
+      
+      // Update button state when collapsible is hidden
+      collapse.addEventListener('hidden.bs.collapse', function(e) {
+        const activeButton = document.querySelector(`[href="#${this.id}"]`);
+        if (activeButton) {
+          activeButton.classList.remove('active');
+        }
+      });
+    });
+  });
+
+  // Store moyens_controle data in a global variable
+  window.moyensControleData = [];
+  
+  let operationCounter = -1; // Initialize to -1, so the first new form gets index 0
+
+  // Function to create and append a new operation form instance
+  function addNewOperationFormInstance(gammeId) {
+    const container = document.getElementById(`addOperationGamme${gammeId}`);
+
+    // Get the template form (the one with display: none initially)
+    const templateForm = document.getElementById(`newOpForm-${gammeId}-0`);
+    if (!templateForm) {
+      console.error("Template operation form not found!");
+      return null;
+    }
+
+    // Clone the template form
+    const newForm = templateForm.cloneNode(true);
+
+    // Update its ID to be unique
+    operationCounter++; // Increment a global counter for unique IDs
+    newForm.id = `newOpForm-${gammeId}-${operationCounter}`;
+
+    // Make it visible
+    newForm.style.display = 'block';
+
+    // Clear input values for the new form
+    newForm.querySelectorAll('input, textarea, select').forEach(input => {
+      if (input.name) { // Check if input has a name
+        // Extract the base name (e.g., 'titre', 'description', 'frequence', 'moyen_controle')
+        // The original name is like "newop_{{ gamme.id }}_0_titre"
+        // Extract the base name (e.g., 'titre', 'description', 'moyen_controle', 'moyens_controle')
+        // The original name is like "newop_{{ gamme.id }}_0_titre" or "newop_{{ gamme.id }}_0_moyens_controle"
+        const nameParts = input.name.split('_');
+        let baseName = '';
+        if (nameParts.length >= 4 && nameParts[0] === 'newop') {
+          // Reconstruct the base name from the 4th part onwards
+          baseName = nameParts.slice(3).join('_');
+        } else {
+          // Fallback for other naming conventions if any
+          baseName = nameParts[nameParts.length - 1];
+        }
+        
+        input.name = `newop_${gammeId}_${operationCounter}_${baseName}`;
+        
+        if (input.type !== 'button' && input.type !== 'submit' && input.type !== 'hidden' && input.type !== 'checkbox' && input.type !== 'radio') {
+          input.value = '';
+        } else if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = false;
+        }
+      }
+    });
+
+    // Reset photo forms container
+    const photoContainer = newForm.querySelector('.photo-forms-container');
+    if (photoContainer) {
+      photoContainer.id = `newOpPhotoFormsContainer-${gammeId}_${operationCounter}`;
+      photoContainer.innerHTML = ''; // Clear any existing photo forms
+    }
+
+    // Update the onclick for the "Add Photo" button within the new form
+    const addPhotoBtn = newForm.querySelector('button[onclick*="addNewOpPhotoForm"]');
+    if (addPhotoBtn) {
+      addPhotoBtn.setAttribute('onclick', `event.stopPropagation(); addNewOpPhotoForm('${gammeId}', ${operationCounter}, event);`);
+    }
+
+    // Set the order field to be one more than the last operation's order in this gamme
+    const orderInput = newForm.querySelector('input[name$="_ordre"]');
+    if (orderInput) {
+      let existingOrders = [];
+
+      // 1. Get orders from existing operations displayed in the table
+      const existingOpsTable = document.getElementById(`operationsGamme${gammeId}`);
+      if (existingOpsTable) {
+        const tableOrderInputs = existingOpsTable.querySelectorAll('input[name$="-ordre"]');
+        tableOrderInputs.forEach(input => {
+          const order = parseInt(input.value);
+          if (!isNaN(order) && order > 0) {
+            existingOrders.push(order);
+          }
+        });
+      }
+
+      // 2. Get orders from newly added (but not yet saved) operation forms
+      //    These are within the 'addOperationGamme' container itself, excluding the current newForm
+      const newOpForms = container.querySelectorAll('.operation-form:not([style*="display: none"]) input[name$="_ordre"]');
+      newOpForms.forEach(input => {
+        // Ensure we don't add the order of the form we are currently creating
+        if (input !== orderInput) {
+          const order = parseInt(input.value);
+          if (!isNaN(order) && order > 0) {
+            existingOrders.push(order);
+          }
+        }
+      });
+
+      const maxOrder = existingOrders.length > 0 ? Math.max(...existingOrders) : 0;
+      orderInput.value = maxOrder + 1;
+    }
+
+    // Append the new form to the container
+    container.appendChild(newForm);
+
+    // Ensure the container itself is visible (the collapse)
+    const bsCollapse = bootstrap.Collapse.getInstance(container) || new bootstrap.Collapse(container);
+    if (!container.classList.contains('show')) {
+      bsCollapse.show();
+    }
+
+    return newForm;
+  }
+
+  // Add a new operation form (initial display)
+  function showAddOperationForm(gammeId) {
+    const container = document.getElementById(`addOperationGamme${gammeId}`);
+
+    // Check if there's already a visible operation form within this container
+    const visibleForm = container.querySelector('.operation-form:not([style*="display: none"])');
+
+    if (visibleForm) {
+      // If a form is already visible, do nothing (or focus on it if needed)
+      console.log("An operation form is already visible. Not adding a new one.");
+      // Ensure the container itself is visible (the collapse)
+      const bsCollapse = bootstrap.Collapse.getInstance(container) || new bootstrap.Collapse(container);
+      if (!container.classList.contains('show')) {
+        bsCollapse.show();
+      }
+      return;
+    }
+
+    // If no visible form, create the first one
+    addNewOperationFormInstance(gammeId);
+  }
+
+  // Function to add another operation form
+  function addAnotherOperationForm(gammeId) {
+    const newForm = addNewOperationFormInstance(gammeId);
+    if (newForm) {
+      // Hide the "Add another operation" button in the previous form
+      const previousForms = document.querySelectorAll(`#addOperationGamme${gammeId} .operation-form:not(#${newForm.id})`);
+      previousForms.forEach(form => {
+        const btn = form.querySelector('button[onclick*="addAnotherOperationForm"]');
+        if (btn) {
+          btn.style.display = 'none';
+        }
+      });
+
+      // Show the "Add another operation" button in the newly created form
+      const newBtn = newForm.querySelector('button[onclick*="addAnotherOperationForm"]');
+      if (newBtn) {
+        newBtn.style.display = 'inline-block'; // Or whatever the default display style is
+      }
+    }
+  }
+
+  // Add new operation form in "Nouvelle Gamme" form
+  function addOperationForm() {
+    const container = document.getElementById('operation-forms-container');
+    if (!container) return;
+
+    const formIndex = container.children.length;
+    
+    // Find the highest existing order number
+    let highestOrder = 0;
+    document.querySelectorAll('input[name$="-ordre"]').forEach(input => {
+      const order = parseInt(input.value) || 0;
+      if (order > highestOrder) {
+        highestOrder = order;
+      }
+    });
+    const nextOrder = highestOrder + 1;
+    
+    const div = document.createElement('div');
+    div.className = 'card card-light mb-3 operation-form';
+    div.id = `newOpForm-${formIndex}`;
+
+    div.innerHTML = `
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h6 class="card-title">Opération</h6>
+          <button type="button" class="btn-close" onclick="removeOperationForm(this)"></button>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Titre</label>
+            <input type="text" name="form-${formIndex}-titre" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Ordre</label>
+            <input type="number" name="form-${formIndex}-ordre" class="form-control" value="${nextOrder}" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="form-${formIndex}-description" class="form-control" required></textarea>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Critères</label>
+            <textarea name="form-${formIndex}-criteres" class="form-control" required></textarea>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Moyens de contrôle</label>
+            <input type="text" name="form-${formIndex}-moyen_controle" class="form-control">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Fréquence </label>
+            <input type="number" name="form-${formIndex}-frequence" class="form-control" value="1" min="1" required>
+          </div>
+        </div>
+        <div class="photo-forms-container" id="newOpPhotoFormsContainerForm${formIndex}"></div>
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-3" onclick="addNewOpPhotoFormForForm(${formIndex})">
+          <i class="bi bi-camera"></i> Ajouter une photo
+        </button>
+      </div>
+    `;
+    container.appendChild(div);
+
+    // Update management form TOTAL_FORMS
+    const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
+    if(totalFormsInput){
+      totalFormsInput.value = parseInt(totalFormsInput.value) + 1;
+    }
+  }
+
+  // Mark photo for deletion (hide card and add hidden input)
+  function markPhotoDelete(photoId, btn) {
+    const photoCard = document.getElementById(`photoCell-${photoId}`);
+    if(photoCard){
+        photoCard.style.display = 'none';
+
+        // Add hidden input to mark delete
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = `photo_${photoId}_DELETE`;
+        input.value = 'on';
+
+        photoCard.appendChild(input);
+        const opId = photoCard.closest('.photo-forms-container').querySelector('[id^=newPhotoFormsContainer-]').id.split('-')[1];
+        updatePhotoCounter(opId);
+    }
+  }
+
+  // Zoom photo function
+  function zoomPhoto(img) {
+    const overlay = document.getElementById('photoZoom');
+    const zoomedImage = document.getElementById('zoomedImage');
+    const zoomDesc = overlay.querySelector('.zoom-description');
+
+    zoomedImage.src = img.src;
+
+    let desc = '';
+
+    // For photos in table or card
+    const photoCell = img.closest('.photo-cell');
+    if (photoCell) {
+      const descElem = photoCell.querySelector('.photo-description');
+      if(descElem){
+        desc = descElem.textContent;
+      }
+    } else {
+      // For photos in form inputs: try to find sibling input description
+      const cardBody = img.closest('.card-body');
+      if (cardBody) {
+        const inputDesc = cardBody.querySelector('input[type="text"]');
+        if(inputDesc){
+          desc = inputDesc.value;
+        }
+      }
+    }
+
+    zoomDesc.textContent = desc || '';
+
+    overlay.style.display = 'flex';
+  }
+
+  function updatePhotoCounter(opId) {
+    const container = document.getElementById(`newPhotoFormsContainer-${opId}`).closest('.photo-forms-container');
+    const addButton = document.getElementById(`addPhotoBtn${opId}`);
+    const visiblePhotos = container.querySelectorAll('.photo-cell:not([style*="display: none"])').length;
+
+    let counter = container.querySelector('.photo-counter');
+    if (!counter) {
+        counter = document.createElement('small');
+        counter.className = 'photo-counter text-muted d-block mt-1';
+        container.appendChild(counter);
+    }
+
+    counter.textContent = `${visiblePhotos}/5 photos`;
+
+    if (visiblePhotos >= 5) {
+        addButton.disabled = true;
+        addButton.classList.add('disabled');
+    } else {
+        addButton.disabled = false;
+        addButton.classList.remove('disabled');
+    }
+  }
+
+  
+
+  // Initialize photo counters and moyens controle when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    
+    // Initialize existing photo counters
+    document.querySelectorAll('[id^=newPhotoFormsContainer-]').forEach(container => {
+        const opId = container.id.split('-')[1];
+        updatePhotoCounter(opId);
+    });
+  });
+
+  // Close zoom overlay
+  function closeZoom() {
+    const overlay = document.getElementById('photoZoom');
+    overlay.style.display = 'none';
+  }
+
+  // Handle defect photo upload form submission
+  document.querySelectorAll('[id^=photoDefautForm]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const gammeId = formData.get('gamme_id');
+      const statusEl = document.getElementById(`uploadStatus${gammeId}`);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      
+      statusEl.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Chargement...</span></div> Téléchargement...';
+      
+      const uploadUrl = '{% url "Gamme:upload_photo_defaut" %}';
+      fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken,
+        },
+        credentials: 'same-origin'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Téléchargement réussi</span>';
+          // Reload the page to show the new photos
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          statusEl.innerHTML = `<span class="text-danger">Erreur: ${data.error || 'Erreur inconnue'}</span>`;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        statusEl.innerHTML = '<span class="text-danger">Erreur lors du téléchargement</span>';
+      });
+    });
+  });
+
+  // Handle acceptable photo upload form submission
+  document.querySelectorAll('[id^=photoAcceptableForm]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const gammeId = formData.get('gamme_id');
+      const statusEl = document.getElementById(`uploadAcceptableStatus${gammeId}`);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      
+      statusEl.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Chargement...</span></div> Téléchargement...';
+      
+      const uploadUrl = '{% url "Gamme:upload_photo_acceptable" %}';
+      fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken,
+        },
+        credentials: 'same-origin'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Téléchargement réussi</span>';
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          statusEl.innerHTML = `<span class="text-danger">Erreur: ${data.error || 'Erreur inconnue'}</span>`;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        statusEl.innerHTML = '<span class="text-danger">Erreur lors du téléchargement</span>';
+      });
+    });
+  });
+
+  // Delete photo defaut
+  window.deletePhotoDefaut = function(photoId, btn) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) return;
+    
+    const card = btn.closest('.col-md-3');
+    card.style.opacity = '0.5';
+    
+    // Use the correct URL pattern from Django URL configuration
+    fetch(`/gamme/photo-defaut/${photoId}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        card.remove();
+        // If no photos left, show message
+        if (!document.querySelector(`#existingPhotos${data.gamme_id} .col-md-3`)) {
+          document.querySelector(`#existingPhotos${data.gamme_id}`).innerHTML = 
+            '<div class="col-12"><p class="text-muted">Aucune photo de défaut pour l\'instant.</p></div>';
+        }
+      } else {
+        alert('Erreur lors de la suppression: ' + (data.error || 'Erreur inconnue'));
+        card.style.opacity = '1';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Erreur lors de la suppression');
+      card.style.opacity = '1';
+    });
+  };
+
+  // Delete acceptable photo
+  window.deletePhotoAcceptable = function(photoId, btn) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo de limite acceptable ?')) return;
+    
+    const card = btn.closest('.col-md-3');
+    card.style.opacity = '0.5';
+    
+    fetch(`/gamme/photo-acceptable/${photoId}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        card.remove();
+        // If no more photos, show empty state
+        const container = document.querySelector(`#existingAcceptablePhotos${data.gamme_id}`);
+        if (container && container.children.length === 0) {
+          container.innerHTML = `
+            <div class="col-12">
+              <div class="text-center p-4 border rounded bg-light">
+                <i class="bi bi-images fs-1 text-muted mb-2"></i>
+                <p class="text-muted mb-0">Aucune photo de limite acceptable pour l'instant.</p>
+                <p class="small text-muted mt-2">Utilisez le formulaire ci-dessus pour ajouter des photos.</p>
+              </div>
+            </div>`;
+        }
+      } else {
+        alert('Erreur lors de la suppression de la photo');
+        card.style.opacity = '1';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Erreur lors de la suppression de la photo');
+      card.style.opacity = '1';
+    });
+  };
+
+  // Custom form submission handler
+  function submitForm(event) {
+    // Prevent default form submission if called directly
+    if (event) {
+      event.preventDefault();
+    }
+    
+    const form = document.getElementById('missionForm');
+    console.log('=== Form submission started ===');
+    
+    // Create FormData object
+    const formData = new FormData(form);
+    
+    // Manually add all operation fields to ensure they're included
+    document.querySelectorAll('input[name$="-titre"], input[name$="-ordre"], textarea[name$="-description"], textarea[name$="-criteres"], input[name^="newop_"][name$="_titre"], input[name^="newop_"][name$="_ordre"], textarea[name^="newop_"][name$="_description"], textarea[name^="newop_"][name$="_criteres"], input[name^="newop_"][name$="_frequence"], input[name^="newop_"][name$="_moyen_controle"]').forEach(field => {
+      if (!formData.has(field.name)) {
+        formData.append(field.name, field.value);
+      }
+    });
+    
+    // Add selected moyens controle checkboxes
+    document.querySelectorAll('.moyen-checkbox:checked').forEach(checkbox => {
+      formData.append(checkbox.name, checkbox.value);
+    });
+    
+    // Add photo descriptions
+    document.querySelectorAll('input[name^="photo_"][name$="_description"]').forEach(field => {
+      if (!formData.has(field.name)) {
+        formData.append(field.name, field.value);
+      }
+    });
+    
+    // Log all form data for debugging
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}: [File] ${value.name} (${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`${key}: ${value}`);
+      }
+    }
+    
+    // Check form validity
+    if (!form.checkValidity()) {
+      console.log('Form is invalid');
+      form.classList.add('was-validated');
+      
+      // Find and log all invalid fields
+      const invalidFields = form.querySelectorAll(':invalid');
+      console.log(`Found ${invalidFields.length} invalid fields:`);
+      
+      invalidFields.forEach((field, index) => {
+        const fieldName = field.name || field.id || 'unknown-field';
+        console.log(`  ${index + 1}. ${fieldName}`, {
+          value: field.value,
+          validity: field.validity,
+          required: field.required,
+          pattern: field.pattern
+        });
+      });
+      
+      // Scroll to first invalid field
+      if (invalidFields.length > 0) {
+        invalidFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        invalidFields[0].focus();
+      }
+      
+      return false;
+    }
+    
+    console.log('Form is valid, submitting...');
+    
+    // Show loading state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enregistrement...';
+    
+    // Submit the form using fetch to handle the response
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else {
+        return response.json().then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            throw new Error(data.message || 'Erreur lors de la sauvegarde');
+          }
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Une erreur est survenue lors de la sauvegarde: ' + error.message);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
+    });
+    
+    return false;
+  }
+  
+  // Add form submission handler
+  document.getElementById('missionForm').addEventListener('submit', submitForm);
+
+  function checkForDuplicateOrders() {
+    const orderValues = new Map(); // Map to store order values and their input elements
+    let hasDuplicates = false;
+    
+    // Find all order inputs in the form
+    const orderInputs = document.querySelectorAll('input[name$="_ordre"], input[name$="-ordre"]');
+    
+    // Reset previous error states
+    document.querySelectorAll('.order-error').forEach(el => el.remove());
+    orderInputs.forEach(input => input.classList.remove('is-invalid'));
+    
+    // Check each order input
+    for (const input of orderInputs) {
+      const value = input.value.trim();
+      if (value === '' || isNaN(value)) continue; // Skip empty or invalid numbers
+      
+      if (orderValues.has(value)) {
+        // Found a duplicate
+        hasDuplicates = true;
+        // Mark both inputs as invalid
+        input.classList.add('is-invalid');
+        orderValues.get(value).classList.add('is-invalid');
+        
+        // Add error message if not already present
+        if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('order-error')) {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'order-error invalid-feedback d-block';
+          errorDiv.textContent = 'Cette valeur d\'ordre est déjà utilisée. Veuillez en choisir une autre.';
+          input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+      } else {
+        orderValues.set(value, input);
+      }
+    }
+    
+    return hasDuplicates;
+  }
+  
+  // Function to reorder operation rows based on order value
+  function reorderOperationRows(gammeId) {
+    const tableBody = document.querySelector(`#tableOperationsGamme${gammeId} tbody`);
+    if (!tableBody) return;
+
+    // Get all rows and convert to array
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    
+    // Sort rows based on order value
+    rows.sort((a, b) => {
+      const orderA = parseInt(a.querySelector('input[name$="_ordre"]')?.value || '0');
+      const orderB = parseInt(b.querySelector('input[name$="_ordre"]')?.value || '0');
+      return orderA - orderB;
+    });
+
+    // Remove all rows
+    while (tableBody.firstChild) {
+      tableBody.removeChild(tableBody.firstChild);
+    }
+
+    // Add rows back in sorted order
+    rows.forEach(row => tableBody.appendChild(row));
+  }
+
+  // Add event listeners to order inputs for real-time validation and reordering
+  document.addEventListener('input', function(e) {
+    if (e.target.matches('input[name$="_ordre"], input[name$="-ordre"]')) {
+      // Add a small delay to allow the value to update
+      setTimeout(() => {
+        const input = e.target;
+        input.classList.remove('is-invalid');
+        const errorDiv = input.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('order-error')) {
+          errorDiv.remove();
+        }
+        checkForDuplicateOrders();
+        
+        // Find the gamme ID from the closest parent element
+        const gammeId = e.target.closest('[id^="operationsGamme"]')?.id.replace('operationsGamme', '') ||
+                       e.target.closest('[id^="tableOperationsGamme"]')?.id.replace('tableOperationsGamme', '');
+        
+        if (gammeId) {
+          reorderOperationRows(gammeId);
+        }
+      }, 100);
+    }
+  });
+
+  // Form validation before submission
+  document.querySelector('form').addEventListener('submit', function(e) {
+    // First, ensure all order fields have valid numbers
+    const orderInputs = this.querySelectorAll('input[name$="_ordre"], input[name$="-ordre"]');
+    for (const input of orderInputs) {
+      if (input.value.trim() === '' || isNaN(input.value)) {
+        input.value = '0';
+      }
+    }
+    
+    // Check for duplicate order numbers
+    if (checkForDuplicateOrders()) {
+      e.preventDefault();
+      // Scroll to the first error
+      const firstError = document.querySelector('.is-invalid');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+    
+    // Also check new operation forms for empty values
+    const newOrderInputs = this.querySelectorAll('input[name^="newop_"]');
+    for (const input of newOrderInputs) {
+      if (input.name.endsWith('_ordre') && (input.value.trim() === '' || isNaN(input.value))) {
+        input.value = '0';
+      }
+    }
+  });
+
+  // Function to handle gamme validation
+  // This function is called when the user confirms the validation of a gamme
+  // It sends an AJAX request to the server to validate the gamme
+  // and updates the UI accordingly
+  function validateGamme(gammeId) {
+    console.log('Validating gamme ID:', gammeId);
+    
+    // Get the modal and confirm button
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmValidationModal' + gammeId));
+    const validateBtn = document.getElementById('confirmValidateBtn' + gammeId);
+    
+    if (!validateBtn) {
+      console.error('Validate button not found for gamme ID:', gammeId);
+      return;
+    }
+    
+    // Show loading state
+    const originalBtnText = validateBtn.innerHTML;
+    validateBtn.disabled = true;
+    validateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validation en cours...';
+    
+    // Close the modal
+    if (modal) {
+      modal.hide();
+    } else {
+      console.warn('Modal not found for gamme ID:', gammeId);
+    }
+    
+    // Call the validation endpoint
+    fetch(`/gamme/gamme/${gammeId}/validate/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest',
+      }
+    })
+    .then(response => {
+      console.log('Validation response status:', response.status);
+      if (!response.ok) {
+        return response.json().then(err => { 
+          console.error('Validation error:', err);
+          throw err; 
+        });
+      }
+      return response.json().then(data => {
+        console.log('Validation successful, data:', data);
+        return data;
+      });
+    })
+    .then(data => {
+      if (data.success) {
+        console.log('Updating UI for validated gamme ID:', gammeId);
+        // Find the validate button container (parent of the button) and update it
+        const validateButton = document.querySelector(`button[data-bs-target="#confirmValidationModal${gammeId}"]`);
+        if (!validateButton) {
+          console.error('Could not find validate button for gamme ID:', gammeId);
+        } else {
+          const validateButtonContainer = validateButton.parentNode;
+          validateButtonContainer.innerHTML = `
+            <button type="button" class="btn btn-sm btn-success" disabled>
+              <i class="bi bi-check-circle-fill"></i> Validée le ${new Date().toLocaleString('fr-FR')}
+            </button>
+          `;
+        }
+        
+        // Show success message
+        const toastEl = document.getElementById('toastSuccess');
+        const toast = new bootstrap.Toast(toastEl);
+        document.getElementById('toastSuccessMessage').textContent = data.message || 'Gamme validée avec succès !';
+        
+        // Reload the page to ensure all data is in sync
+        // We use a small timeout to ensure the toast is visible
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        
+        // Show the toast
+        toast.show();
+      } else {
+        throw new Error(data.error || 'Erreur inconnue lors de la validation');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      
+      // Show error message
+      const toast = new bootstrap.Toast(document.getElementById('toastError'));
+      document.getElementById('toastErrorMessage').textContent = 'Erreur: ' + (error.message || 'Une erreur est survenue lors de la validation');
+      toast.show();
+      
+      // Re-enable the button
+      validateBtn.disabled = false;
+      validateBtn.innerHTML = originalBtnText;
+    });
+  }
+</script>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+  <!-- Success Toast -->
+  <div id="toastSuccess" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+    <div class="toast-header bg-success text-white">
+      <strong class="me-auto">Succès</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body" id="toastSuccessMessage">
+      Opération effectuée avec succès.
+    </div>
+  </div>
+  
+  <!-- Error Toast -->
+  <div id="toastError" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+    <div class="toast-header bg-danger text-white">
+      <strong class="me-auto">Erreur</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body" id="toastErrorMessage">
+      Une erreur est survenue lors de l'opération.
+    </div>
+  </div>
+</div>
+
+{% endblock %}
