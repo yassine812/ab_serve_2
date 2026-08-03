@@ -31,16 +31,19 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', '1') == '1'
 
-DEFAULT_ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+DEFAULT_ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if host.strip()]
 if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ['*'] if DEBUG else DEFAULT_ALLOWED_HOSTS
+    ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://localhost', 'http://127.0.0.1']
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Additional locations of static files
 STATICFILES_DIRS = [
@@ -72,10 +75,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'Gamme.apps.GammeConfig',
 ]
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -107,12 +110,27 @@ WSGI_APPLICATION = 'ab_serve.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+IS_VERCEL = os.getenv('VERCEL') == '1' or 'VERCEL' in os.environ
+
+if IS_VERCEL:
+    import shutil
+    tmp_db = Path('/tmp/db.sqlite3')
+    if not tmp_db.exists() and (BASE_DIR / 'db.sqlite3').exists():
+        try:
+            shutil.copy2(BASE_DIR / 'db.sqlite3', tmp_db)
+        except Exception:
+            pass
+    db_path = tmp_db if tmp_db.exists() else BASE_DIR / 'db.sqlite3'
+else:
+    db_path = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': db_path,
     }
 }
+
 
 # Custom login URL
 LOGIN_URL = 'Gamme:login'
