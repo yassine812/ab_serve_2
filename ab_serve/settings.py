@@ -134,9 +134,10 @@ DATABASES = {
 
 
 # Custom login URL
-LOGIN_URL = 'Gamme:login'
+LOGIN_URL = 'Gamme:demo_select'
 AUTH_USER_MODEL = 'Gamme.User'
 LOGIN_REDIRECT_URL = reverse_lazy('Gamme:dashboard')
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
