@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "ab_serve/wsgi.py": {
-      "runtime": "python3.11",
       "includeFiles": "{staticfiles/**,templates/**,Gamme/templates/**,db.sqlite3}",
       "excludeFiles": "{mobile/**,static/**,media/**,venv/**,node_modules/**,debug.log}"
     }
