@@ -1,0 +1,5 @@
+media/
+venv/
+node_modules/
+mobile/.expo/
+debug.log

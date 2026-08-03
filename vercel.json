@@ -1,26 +1,16 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "ab_serve/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.11",
-        "includeFiles": [
-          "staticfiles/**",
-          "static/**",
-          "templates/**",
-          "Gamme/templates/**",
-          "db.sqlite3"
-        ]
-      }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "ab_serve/wsgi.py": {
+      "runtime": "python3.11",
+      "includeFiles": "{staticfiles/**,templates/**,Gamme/templates/**,db.sqlite3}",
+      "excludeFiles": "{mobile/**,static/**,media/**,venv/**,node_modules/**,debug.log}"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "ab_serve/wsgi.py"
+      "source": "/(.*)",
+      "destination": "/ab_serve/wsgi.py"
     }
   ]
 }
