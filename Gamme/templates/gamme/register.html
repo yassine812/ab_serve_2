@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>inscription - Gamme Controle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+  <style>
+    body.register-page {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 30%),
+        linear-gradient(135deg, #0f172a 0%, #172554 50%, #0f5f73 100%);
+      font-family: var(--ds-font-body);
+      padding: 24px 0;
+    }
+
+    .register-card {
+      width: 100%;
+      max-width: 440px;
+      border-radius: var(--ds-radius-xl);
+      background: var(--ds-surface);
+      border: var(--ds-card-border);
+      box-shadow: 0 32px 64px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+
+    .register-card-header {
+      padding: var(--ds-space-2xl) var(--ds-space-2xl) var(--ds-space-xl);
+      text-align: center;
+    }
+
+    .register-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: var(--ds-space-lg);
+    }
+
+    .register-brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--ds-radius-sm);
+      object-fit: contain;
+    }
+
+    .register-brand-text {
+      font-size: var(--ds-text-xl);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--ds-text);
+    }
+
+    .register-brand-text span {
+      color: var(--ds-primary);
+    }
+
+    .register-subtitle {
+      margin: 0;
+      color: var(--ds-text-muted);
+      font-size: var(--ds-text-sm);
+    }
+
+    .register-card-body {
+      padding: 0 var(--ds-space-2xl) var(--ds-space-2xl);
+    }
+
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ds-space-md);
+    }
+
+    .register-form .form-control {
+      height: 48px;
+      border-radius: var(--ds-radius-md);
+    }
+
+    .register-submit {
+      margin-top: var(--ds-space-sm);
+      height: 48px;
+      border-radius: var(--ds-radius-md);
+      font-size: var(--ds-text-base);
+    }
+
+    .register-footer {
+      padding: var(--ds-space-lg) var(--ds-space-2xl);
+      border-top: 1px solid var(--ds-border);
+      text-align: center;
+    }
+
+    .register-footer a {
+      color: var(--ds-primary);
+      font-weight: 600;
+      text-decoration: none;
+      font-size: var(--ds-text-sm);
+      transition: color var(--ds-transition);
+    }
+
+    .register-footer a:hover {
+      color: var(--ds-primary-hover);
+    }
+
+    .error-text {
+      color: var(--ds-danger);
+      font-size: var(--ds-text-sm);
+      margin-top: -4px;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body class="register-page">
+  <div class="register-card">
+    <div class="register-card-header">
+      <div class="register-brand">
+        <img src="{% static 'logo.jpg' %}" alt="AB Serve" class="register-brand-logo">
+        <span class="register-brand-text"><span>Gamme</span> Controle</span>
+      </div>
+      <p class="register-subtitle">Cree un nouveau compte</p>
+    </div>
+
+    <div class="register-card-body">
+      <form method="post" class="register-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div>
+          <input type="text" name="username" class="form-control" placeholder="Nom d'utilisateur"
+            value="{{ form.username.value|default:'' }}" required>
+          {% if form.username.errors %}
+          <div class="error-text">{{ form.username.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <input type="text" name="first_name" class="form-control" placeholder="Prenom"
+            value="{{ form.first_name.value|default:'' }}">
+          {% if form.first_name.errors %}
+          <div class="error-text">{{ form.first_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <input type="text" name="last_name" class="form-control" placeholder="Nom"
+            value="{{ form.last_name.value|default:'' }}">
+          {% if form.last_name.errors %}
+          <div class="error-text">{{ form.last_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <input type="email" name="email" class="form-control" placeholder="Email"
+            value="{{ form.email.value|default:'' }}" required>
+          {% if form.email.errors %}
+          <div class="error-text">{{ form.email.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <input type="password" name="password1" class="form-control" placeholder="Mot de passe" required>
+          {% if form.password1.errors %}
+          <div class="error-text">{{ form.password1.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <input type="password" name="password2" class="form-control" placeholder="Confirmer le mot de passe" required>
+          {% if form.password2.errors %}
+          <div class="error-text">{{ form.password2.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary register-submit">
+          <i class="bi bi-person-plus"></i>
+          Creer un compte
+        </button>
+      </form>
+    </div>
+
+    <div class="register-footer">
+      <a href="{% url 'Gamme:login' %}">J'ai deja un compte</a>
+    </div>
+  </div>
+</body>
+</html>

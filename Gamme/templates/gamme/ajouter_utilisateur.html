@@ -1,0 +1,367 @@
+{% extends 'Gamme/admin_base.html' %}
+{% block page_title %}Ajouter un utilisateur - Gamme de Controle{% endblock %}
+{% block topbar_title %}Ajouter un utilisateur{% endblock %}
+{% block topbar_subtitle %}Creer un nouveau compte avec role et droits d'acces{% endblock %}
+
+{% block extra_head %}
+<style>
+  .adduser-shell {
+    padding: var(--ds-space-xl);
+    max-width: 860px;
+  }
+
+  .adduser-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .adduser-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .adduser-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .adduser-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .adduser-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .adduser-hero p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .adduser-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .adduser-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .adduser-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .adduser-panel-subtitle {
+    margin: 4px 0 0;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .adduser-form {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-lg);
+  }
+
+  .adduser-section-title {
+    margin: 0 0 var(--ds-space-md);
+    padding-bottom: var(--ds-space-sm);
+    border-bottom: 1px solid var(--ds-border);
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .adduser-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--ds-space-md);
+  }
+
+  .adduser-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .adduser-field--full {
+    grid-column: 1 / -1;
+  }
+
+  .adduser-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-top: 1px solid var(--ds-border);
+  }
+
+  .adduser-role-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-md);
+  }
+
+  .adduser-role-option {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-md) var(--ds-space-lg);
+    border-radius: var(--ds-radius-md);
+    border: 1.5px solid var(--ds-border);
+    background: var(--ds-surface);
+    cursor: pointer;
+    transition: all var(--ds-transition);
+  }
+
+  .adduser-role-option:hover {
+    border-color: var(--ds-primary);
+    background: var(--ds-primary-soft);
+  }
+
+  .adduser-role-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--ds-primary);
+    flex-shrink: 0;
+  }
+
+  .adduser-role-label {
+    font-size: var(--ds-text-base);
+    font-weight: 600;
+    color: var(--ds-text);
+  }
+
+  @media (max-width: 768px) {
+    .adduser-shell {
+      padding: var(--ds-space-lg);
+    }
+
+    .adduser-hero {
+      padding-inline: var(--ds-space-lg);
+    }
+
+    .adduser-field-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .adduser-form {
+      padding: var(--ds-space-lg);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adduser-shell">
+  <section class="adduser-hero">
+    <div class="adduser-hero-inner">
+      <span class="adduser-eyebrow">
+        <i class="bi bi-person-plus"></i>
+        Nouveau compte
+      </span>
+      <h1>Ajouter un utilisateur</h1>
+      <p>Creer un compte et definir le role pour l'acces a la plateforme.</p>
+    </div>
+  </section>
+
+  <div class="adduser-panel">
+    <div class="adduser-panel-head">
+      <div>
+        <h2 class="adduser-panel-title">Informations du compte</h2>
+        <p class="adduser-panel-subtitle">Remplis les champs ci-dessous pour creer un nouvel utilisateur.</p>
+      </div>
+    </div>
+
+    {% if form.errors %}
+    <div style="padding: 0 var(--ds-space-xl);">
+      <div class="alert alert-danger" style="margin-top:var(--ds-space-lg);">
+        <strong>Erreur !</strong> Veuillez corriger les erreurs ci-dessous.
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <form method="post" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="adduser-form">
+        <h3 class="adduser-section-title">Informations de connexion</h3>
+        <div class="adduser-field-grid">
+          <div class="adduser-field">
+            <label class="form-label" for="username">Nom d'utilisateur <span style="color:var(--ds-danger);">*</span></label>
+            <input type="text" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+              id="username" value="{{ form.username.value|default:'' }}" required minlength="3" maxlength="150">
+            {% if form.username.errors %}
+            <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="adduser-field">
+            <label class="form-label" for="email">Adresse email <span style="color:var(--ds-danger);">*</span></label>
+            <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+              id="email" value="{{ form.email.value|default:'' }}" required>
+            {% if form.email.errors %}
+            <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="adduser-field">
+            <label class="form-label" for="first_name">Prenom</label>
+            <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+              id="first_name" value="{{ form.first_name.value|default:'' }}" maxlength="30">
+            {% if form.first_name.errors %}
+            <div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="adduser-field">
+            <label class="form-label" for="last_name">Nom</label>
+            <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+              id="last_name" value="{{ form.last_name.value|default:'' }}" maxlength="150">
+            {% if form.last_name.errors %}
+            <div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="adduser-field">
+            <label class="form-label" for="password1">Mot de passe <span style="color:var(--ds-danger);">*</span></label>
+            <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+              id="password1" required minlength="8">
+            <small style="margin-top:4px;font-size:var(--ds-text-xs);color:var(--ds-text-muted);">
+              Min 8 caracteres, lettres et chiffres.
+            </small>
+            {% if form.password1.errors %}
+            <div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="adduser-field">
+            <label class="form-label" for="password2">Confirmation <span style="color:var(--ds-danger);">*</span></label>
+            <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+              id="password2" required>
+            {% if form.password2.errors %}
+            <div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <h3 class="adduser-section-title" style="margin-top:var(--ds-space-md);">Role</h3>
+        <div class="adduser-role-grid">
+          <label class="adduser-role-option">
+            <input type="radio" name="role" value="op" {% if form.role.value == 'op' %}checked{% endif %}>
+            <div>
+              <span class="adduser-role-label">Operateur</span>
+              <span style="display:block;font-size:var(--ds-text-sm);color:var(--ds-text-secondary);">Acces terrain, missions et consultation</span>
+            </div>
+          </label>
+          <label class="adduser-role-option">
+            <input type="radio" name="role" value="rs" {% if form.role.value == 'rs' %}checked{% endif %}>
+            <div>
+              <span class="adduser-role-label">Responsable</span>
+              <span style="display:block;font-size:var(--ds-text-sm);color:var(--ds-text-secondary);">Supervision equipe, gestion des gammes</span>
+            </div>
+          </label>
+          <label class="adduser-role-option">
+            <input type="radio" name="role" value="ro" {% if form.role.value == 'ro' %}checked{% endif %}>
+            <div>
+              <span class="adduser-role-label">RO (Read Only)</span>
+              <span style="display:block;font-size:var(--ds-text-sm);color:var(--ds-text-secondary);">Consultation et validation</span>
+            </div>
+          </label>
+          {% if form.role.errors %}
+          <div class="invalid-feedback d-block">{{ form.role.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="adduser-actions">
+        <a href="{% url 'Gamme:user_list' %}" class="btn btn-outline-primary">
+          <i class="bi bi-arrow-left"></i> Annuler
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i> Ajouter l'utilisateur
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  var password1 = document.getElementById('password1');
+  var password2 = document.getElementById('password2');
+
+  function validatePassword() {
+    if (password1 && password2 && password1.value !== password2.value) {
+      password2.setCustomValidity("Les mots de passe ne correspondent pas");
+    } else if (password2) {
+      password2.setCustomValidity('');
+    }
+  }
+
+  if (password1) password1.onchange = validatePassword;
+  if (password2) password2.onkeyup = validatePassword;
+
+  Array.prototype.slice.call(forms).forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (password1 && password2) validatePassword();
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  });
+})();
+</script>
+{% endblock %}

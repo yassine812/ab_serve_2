@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AB Serve | Mode Demonstration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+  <style>
+    body.demo-page {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 30%),
+        linear-gradient(135deg, #0f172a 0%, #172554 50%, #0f5f73 100%);
+      font-family: var(--ds-font-body);
+    }
+
+    .demo-card {
+      width: 100%;
+      max-width: 520px;
+      margin: 24px;
+      border-radius: var(--ds-radius-xl);
+      background: var(--ds-surface);
+      border: var(--ds-card-border);
+      box-shadow: 0 32px 64px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+
+    .demo-header {
+      padding: var(--ds-space-2xl) var(--ds-space-2xl) var(--ds-space-xl);
+      text-align: center;
+    }
+
+    .demo-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: var(--ds-space-lg);
+    }
+
+    .demo-brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--ds-radius-sm);
+      object-fit: contain;
+    }
+
+    .demo-brand-text {
+      font-size: var(--ds-text-xl);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--ds-text);
+    }
+
+    .demo-brand-text span {
+      color: var(--ds-primary);
+    }
+
+    .demo-title {
+      margin: 0 0 var(--ds-space-xs);
+      font-size: var(--ds-text-md);
+      font-weight: 700;
+      color: var(--ds-text);
+      letter-spacing: -0.02em;
+    }
+
+    .demo-subtitle {
+      margin: 0;
+      color: var(--ds-text-muted);
+      font-size: var(--ds-text-sm);
+    }
+
+    .demo-body {
+      padding: 0 var(--ds-space-2xl) var(--ds-space-2xl);
+    }
+
+    .demo-role-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ds-space-md);
+    }
+
+    .demo-role-card {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--ds-space-lg);
+      padding: var(--ds-space-lg);
+      border-radius: var(--ds-radius-md);
+      border: 1.5px solid var(--ds-border);
+      background: var(--ds-surface);
+      cursor: pointer;
+      transition: all var(--ds-transition);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .demo-role-card:hover {
+      border-color: var(--ds-primary);
+      background: var(--ds-primary-soft);
+      transform: translateY(-1px);
+      box-shadow: var(--ds-shadow-sm);
+    }
+
+    .demo-role-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--ds-radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.2rem;
+    }
+
+    .demo-role-icon--admin {
+      background: var(--ds-danger-soft);
+      color: var(--ds-danger);
+    }
+
+    .demo-role-icon--operator {
+      background: var(--ds-primary-soft);
+      color: var(--ds-primary);
+    }
+
+    .demo-role-icon--responsible {
+      background: var(--ds-accent-soft);
+      color: var(--ds-accent);
+    }
+
+    .demo-role-info {
+      flex: 1;
+    }
+
+    .demo-role-name {
+      margin: 0 0 2px;
+      font-size: var(--ds-text-base);
+      font-weight: 700;
+      color: var(--ds-text);
+      letter-spacing: -0.01em;
+    }
+
+    .demo-role-desc {
+      margin: 0;
+      font-size: var(--ds-text-sm);
+      color: var(--ds-text-secondary);
+      line-height: 1.45;
+    }
+
+    .demo-role-arrow {
+      color: var(--ds-text-muted);
+      font-size: 1rem;
+      margin-top: 2px;
+      transition: color var(--ds-transition);
+    }
+
+    .demo-role-card:hover .demo-role-arrow {
+      color: var(--ds-primary);
+    }
+
+    .demo-footer {
+      padding: var(--ds-space-lg) var(--ds-space-2xl);
+      border-top: 1px solid var(--ds-border);
+      text-align: center;
+    }
+
+    .demo-footer p {
+      margin: 0;
+      color: var(--ds-text-muted);
+      font-size: var(--ds-text-xs);
+      line-height: 1.5;
+    }
+
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: var(--ds-space-xl);
+      padding: var(--ds-space-xs) var(--ds-space-md);
+      border-radius: var(--ds-badge-radius);
+      background: var(--ds-accent-soft);
+      color: var(--ds-accent);
+      font-size: var(--ds-badge-font);
+      font-weight: var(--ds-badge-weight);
+      letter-spacing: var(--ds-badge-letter-spacing);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body class="demo-page">
+  <div class="demo-card">
+    <div class="demo-header">
+      <div class="demo-brand">
+        <img src="{% static 'logo.jpg' %}" alt="AB Serve" class="demo-brand-logo">
+        <span class="demo-brand-text"><span>AB Serve</span></span>
+      </div>
+      <h1 class="demo-title">Mode Demonstration</h1>
+      <p class="demo-subtitle">Choisis un role pour explorer l'application avec ses permissions.</p>
+      <div class="demo-badge">
+        <i class="bi bi-info-circle"></i>
+        Aucun mot de passe requis
+      </div>
+    </div>
+
+    <div class="demo-body">
+      <div class="demo-role-list">
+        <a href="{% url 'Gamme:demo_login' 'admin' %}" class="demo-role-card">
+          <div class="demo-role-icon demo-role-icon--admin">
+            <i class="bi bi-shield-fill-check"></i>
+          </div>
+          <div class="demo-role-info">
+            <p class="demo-role-name">Administrateur</p>
+            <p class="demo-role-desc">Acces complet : gestion des missions, utilisateurs, equipements et configuration.</p>
+          </div>
+          <i class="bi bi-chevron-right demo-role-arrow"></i>
+        </a>
+
+        <a href="{% url 'Gamme:demo_login' 'operator' %}" class="demo-role-card">
+          <div class="demo-role-icon demo-role-icon--operator">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div class="demo-role-info">
+            <p class="demo-role-name">Operateur</p>
+            <p class="demo-role-desc">Consultation des missions, generation de PDF et suivi terrain uniquement.</p>
+          </div>
+          <i class="bi bi-chevron-right demo-role-arrow"></i>
+        </a>
+
+        <a href="{% url 'Gamme:demo_login' 'responsible' %}" class="demo-role-card">
+          <div class="demo-role-icon demo-role-icon--responsible">
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <div class="demo-role-info">
+            <p class="demo-role-name">Responsable</p>
+            <p class="demo-role-desc">Validation des missions, suivi qualite et gestion des gammes, sans acces configuration.</p>
+          </div>
+          <i class="bi bi-chevron-right demo-role-arrow"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="demo-footer">
+      <p>Portfolio demo &mdash; les donnees affichees sont simultees.<br>Le vrai login reste disponible sur <a href="{% url 'Gamme:login' %}" style="color:var(--ds-primary);">/login/</a></p>
+    </div>
+  </div>
+</body>
+</html>

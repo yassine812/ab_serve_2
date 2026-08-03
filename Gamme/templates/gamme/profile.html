@@ -1,0 +1,209 @@
+{% extends 'Gamme/admin_base.html' %}
+{% block page_title %}Profil - Gamme de Controle{% endblock %}
+{% block topbar_title %}Profil{% endblock %}
+{% block topbar_subtitle %}Gere tes informations personnelles et ton compte{% endblock %}
+
+{% block extra_head %}
+<style>
+  .profile-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+    max-width: 860px;
+  }
+
+  .profile-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .profile-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .profile-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-xl);
+  }
+
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .profile-hero-copy h1 {
+    margin: 0;
+    font-size: var(--ds-text-2xl);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: #fff;
+  }
+
+  .profile-hero-copy p {
+    margin: 4px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-sm);
+  }
+
+  .profile-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .profile-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .profile-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .profile-form {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-lg);
+  }
+
+  .profile-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--ds-space-lg);
+  }
+
+  .profile-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .profile-field-label {
+    margin-bottom: 6px;
+    font-size: var(--ds-text-xs);
+    font-weight: 700;
+    color: var(--ds-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .profile-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-top: 1px solid var(--ds-border);
+  }
+
+  @media (max-width: 768px) {
+    .profile-shell {
+      padding: var(--ds-space-lg);
+    }
+
+    .profile-hero {
+      padding-inline: var(--ds-space-lg);
+    }
+
+    .profile-field-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .profile-form {
+      padding: var(--ds-space-lg);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-shell">
+  <section class="profile-hero">
+    <div class="profile-hero-top">
+      <div class="profile-avatar">
+        <i class="bi bi-person-circle"></i>
+      </div>
+      <div class="profile-hero-copy">
+        <h1>{{ user.get_full_name|default:user.username }}</h1>
+        <p>{{ user.email }} &middot; {% if user.is_superuser or user.is_admin %}Administrateur{% elif user.is_rs %}Responsable{% elif user.is_ro %}RO{% elif user.is_op %}Operateur{% else %}Compte{% endif %}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="profile-panel">
+    <div class="profile-panel-head">
+      <h2 class="profile-panel-title">Informations du profil</h2>
+    </div>
+
+    <form method="post" action="{% url 'Gamme:profile' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="profile-form">
+        <div class="profile-field-grid">
+          <div class="profile-field">
+            <label class="profile-field-label">Nom d'utilisateur</label>
+            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Prenom</label>
+            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Nom</label>
+            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+          </div>
+          <div class="profile-field">
+            <label class="profile-field-label">Role</label>
+            <input type="text" class="form-control" readonly
+              value="{% if user.is_admin %}Administrateur{% elif user.is_rs %}Responsable{% elif user.is_ro %}RO{% elif user.is_op %}Operateur{% endif %}"
+              style="background: var(--ds-surface-muted); color: var(--ds-text-muted);">
+          </div>
+        </div>
+      </div>
+      <div class="profile-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg"></i>
+          Mettre a jour
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "AB Serve Mobile",
+    "slug": "ab-serve-mobile",
+    "scheme": "abserve",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.abserve.mobile"
+    },
+    "ios": {
+      "bundleIdentifier": "com.abserve.mobile"
+    }
+  }
+}

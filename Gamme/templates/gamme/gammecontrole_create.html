@@ -1,0 +1,194 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+{% block page_title %}Nouvelle Gamme - Gamme de Controle{% endblock %}
+{% block topbar_title %}Nouvelle gamme{% endblock %}
+{% block topbar_subtitle %}Creer une gamme de controle et ses operations{% endblock %}
+
+{% block content %}
+<style>
+  .gamme-create-shell {
+    padding: var(--ds-space-xl);
+  }
+
+  .gamme-create-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .gamme-create-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .gamme-create-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .gamme-create-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .gamme-create-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .gamme-create-hero p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .gamme-create-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .gamme-create-panel-head {
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .gamme-create-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .gamme-create-panel-subtitle {
+    margin: 4px 0 0;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .gamme-create-body {
+    padding: var(--ds-space-xl);
+  }
+
+  .gamme-create-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-top: 1px solid var(--ds-border);
+  }
+</style>
+
+<div class="gamme-create-shell">
+  <section class="gamme-create-hero">
+    <div class="gamme-create-hero-inner">
+      <span class="gamme-create-eyebrow">
+        <i class="bi bi-plus-circle"></i>
+        Nouvelle gamme
+      </span>
+      <h1>Creer une gamme</h1>
+      <p>Associe une gamme a une mission et configure ses parametres.</p>
+    </div>
+  </section>
+
+  <div class="gamme-create-panel">
+    <div class="gamme-create-panel-head">
+      <div>
+        <h2 class="gamme-create-panel-title">Parametres de la gamme</h2>
+        <p class="gamme-create-panel-subtitle">Remplis les champs ci-dessous pour creer une nouvelle gamme de controle.</p>
+      </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="gamme-create-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Mission</label>
+            <select name="mission" class="form-select" required>
+              <option value="">Selectionner une mission</option>
+              {% for mission in missions %}
+                <option value="{{ mission.id }}" {% if form.mission.value|stringformat:"s" == mission.id|stringformat:"s" %}selected{% endif %}>
+                  {{ mission.intitule }} ({{ mission.code }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Intitule</label>
+            <input type="text" name="intitule" class="form-control" value="{{ form.intitule.value|default_if_none:'' }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Statut</label>
+            <select name="statut" class="form-select" required>
+              <option value="True" {% if form.statut.value == True %}selected{% endif %}>Actif</option>
+              <option value="False" {% if form.statut.value == False %}selected{% endif %}>Inactif</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">No Incident</label>
+            <input type="text" name="No_incident" class="form-control" value="{{ form.No_incident.value|default_if_none:'' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Temps alloue (min)</label>
+            <input type="number" name="Temps_alloue" class="form-control" value="{{ form.Temps_alloue.value|default_if_none:'' }}" min="0">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Commentaire</label>
+            <textarea name="commantaire" class="form-control" rows="2">{{ form.commantaire.value|default_if_none:'' }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Identification carton et emballage</label>
+            <textarea name="commantaire_identification" class="form-control" rows="2">{{ form.commantaire_identification.value|default_if_none:'' }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Identification non conforme</label>
+            <textarea name="commantaire_traitement_non_conforme" class="form-control" rows="2">{{ form.commantaire_traitement_non_conforme.value|default_if_none:'' }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Photo traitement non conforme</label>
+            <input type="file" name="photo_traitement_non_conforme" class="form-control" accept="image/*">
+          </div>
+        </div>
+      </div>
+
+      <div class="gamme-create-actions">
+        <a href="{% url 'Gamme:gammecontrole_list' %}" class="btn btn-outline-primary">
+          <i class="bi bi-arrow-left"></i> Annuler
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save"></i> Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

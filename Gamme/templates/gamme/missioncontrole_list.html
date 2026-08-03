@@ -1,0 +1,774 @@
+{% extends 'Gamme/admin_base.html' %}
+{% block page_title %}Missions - Gamme de Controle{% endblock %}
+{% block app_layout_class %}layout-with-rightbar{% endblock %}
+{% block topbar_title %}Missions{% endblock %}
+{% block topbar_subtitle %}Suivi des missions de controle et generation PDF{% endblock %}
+{% block topbar_tools %}
+{% if not is_operator %}
+<button type="button" class="topbar-tools" data-app-toggle="right-sidebar" aria-controls="appRightSidebar">
+  <i class="bi bi-funnel"></i>
+  Filtres
+  {% if current_statut or current_reference or current_query %}
+  <span class="topbar-tools-badge"></span>
+  {% endif %}
+</button>
+{% endif %}
+{% endblock %}
+
+{% block right_sidebar %}
+{% if not is_operator %}
+<aside class="app-sidebar-right" id="appRightSidebar" aria-label="Filtres missions">
+  <div class="app-sidebar-right-inner">
+    <section class="filters-panel">
+      <div class="filters-panel-header">
+        <div class="filters-panel-header-row">
+          <div>
+            <h2>Filtres missions</h2>
+            <p>Trie la liste sans pousser le tableau hors cadre et garde un apercu clair du resultat en cours.</p>
+          </div>
+          <button type="button" class="btn-icon filters-panel-close" data-app-close-drawers aria-label="Fermer les filtres">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-result-pill"><span>{{ object_list.count }}</span> resultats</div>
+
+      {% if current_statut or current_reference or current_query %}
+      <div class="filter-state is-active">
+        <i class="bi bi-funnel-fill"></i>
+        <p>Des filtres sont actifs sur cette vue. La colonne centrale affiche deja le resultat filtre.</p>
+      </div>
+      {% else %}
+      <div class="filter-state">
+        <i class="bi bi-circle-dashed"></i>
+        <p>Aucun filtre actif. Toutes les missions visibles dans ton perimetre sont affichees.</p>
+      </div>
+      {% endif %}
+
+      <div class="filter-counter-grid">
+        <div class="filter-counter">
+          <span>Actives</span>
+          <strong>{{ missions_active }}</strong>
+        </div>
+        <div class="filter-counter">
+          <span>PDF</span>
+          <strong>{{ missions_with_pdf }}</strong>
+        </div>
+      </div>
+
+      <form method="get" class="filters-form">
+        <div>
+          <label for="sidebarMissionStatus" class="sidebar-field-label">Statut</label>
+          <select id="sidebarMissionStatus" name="statut" class="form-select">
+            <option value="">Tous les statuts</option>
+            <option value="1" {% if current_statut == '1' %}selected{% endif %}>Actif</option>
+            <option value="0" {% if current_statut == '0' %}selected{% endif %}>Inactif</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="sidebarMissionReference" class="sidebar-field-label">Reference</label>
+          <select id="sidebarMissionReference" name="reference" class="form-select">
+            <option value="">Toutes les references</option>
+            {% for ref in references %}
+            <option value="{{ ref }}" {% if current_reference == ref %}selected{% endif %}>{{ ref }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label for="sidebarMissionQuery" class="sidebar-field-label">Recherche</label>
+          <input id="sidebarMissionQuery" type="text" name="q" class="form-control" placeholder="Code, client, designation..." value="{{ current_query }}" />
+        </div>
+
+        <div class="filters-form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i>
+            Appliquer
+          </button>
+          {% if current_statut or current_reference or current_query %}
+          <a href="{% url 'Gamme:missioncontrole_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Reinitialiser
+          </a>
+          {% endif %}
+        </div>
+      </form>
+    </section>
+  </div>
+</aside>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .modal-body { overflow: hidden !important; padding: 0 !important; }
+
+  .mission-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+  }
+
+  .mission-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .mission-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .mission-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .mission-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .mission-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .mission-hero p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .mission-hero-actions .btn {
+    min-height: 46px;
+    padding-inline: 18px;
+    border-radius: var(--ds-radius-md);
+    box-shadow: none;
+  }
+
+  .mission-hero-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ds-hero-start);
+  }
+
+  .mission-hero-actions .btn-primary:hover {
+    background: var(--ds-gray-100);
+    border-color: var(--ds-gray-100);
+    color: var(--ds-hero-start);
+  }
+
+  .mission-stats {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--ds-space-md);
+    margin-top: var(--ds-space-xl);
+  }
+
+  .mission-stat {
+    padding: var(--ds-space-lg) var(--ds-space-lg);
+    border-radius: var(--ds-radius-lg);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .mission-stat-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--ds-badge-font);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--ds-space-xs);
+  }
+
+  .mission-stat-value {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ds-space-sm);
+    font-size: var(--ds-text-2xl);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .mission-stat-note {
+    color: rgba(255, 255, 255, 0.74);
+    font-size: var(--ds-text-sm);
+  }
+
+  .mission-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .mission-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+    flex-wrap: wrap;
+  }
+
+  .mission-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .mission-panel-subtitle {
+    margin: 4px 0 0;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .mission-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .mission-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-sm) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+  }
+
+  .mission-table-wrap {
+    padding: var(--ds-space-sm) var(--ds-space-md) var(--ds-space-md);
+  }
+
+  .mission-table {
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+
+  .mission-table thead th {
+    position: static;
+    background: transparent;
+    border: none;
+    padding: 0 18px 10px;
+    color: var(--ds-text-muted);
+    font-size: var(--ds-text-xs);
+  }
+
+  .mission-table tbody tr {
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-xs);
+    transition: box-shadow var(--ds-transition), transform var(--ds-transition);
+  }
+
+  .mission-table tbody tr:hover {
+    background: var(--ds-surface);
+    transform: translateY(-1px);
+    box-shadow: var(--ds-shadow-sm);
+  }
+
+  .mission-table tbody td {
+    padding: var(--ds-space-lg);
+    border: none;
+    background: transparent;
+  }
+
+  .mission-table tbody td:first-child {
+    border-top-left-radius: var(--ds-radius-lg);
+    border-bottom-left-radius: var(--ds-radius-lg);
+  }
+
+  .mission-table tbody td:last-child {
+    border-top-right-radius: var(--ds-radius-lg);
+    border-bottom-right-radius: var(--ds-radius-lg);
+  }
+
+  .mission-code {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--ds-space-sm) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+    font-family: var(--ds-font-mono);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: 0.02em;
+  }
+
+  .mission-main-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-base);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .mission-subline {
+    margin-top: 5px;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .mission-ref {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--ds-space-sm) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: var(--ds-gray-50);
+    border: 1px solid var(--ds-border);
+    color: var(--ds-gray-700);
+    font-weight: 600;
+    font-size: var(--ds-badge-font);
+  }
+
+  .mission-desc {
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+    line-height: 1.5;
+    max-width: 340px;
+  }
+
+  .mission-date {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: var(--ds-text-sm);
+    color: var(--ds-text-secondary);
+  }
+
+  .mission-date strong {
+    color: var(--ds-text);
+    font-size: var(--ds-text-base);
+  }
+
+  .mission-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+  }
+
+  .mission-footer {
+    padding: var(--ds-space-lg) var(--ds-space-xl) 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    flex-wrap: wrap;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .mission-empty {
+    padding: 46px var(--ds-space-lg);
+  }
+
+  .mission-empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-md);
+    min-height: 220px;
+    border-radius: var(--ds-radius-lg);
+    border: 1px dashed var(--ds-gray-300);
+    background: var(--ds-surface-muted);
+    color: var(--ds-text-secondary);
+    text-align: center;
+  }
+
+  .mission-empty-card i {
+    font-size: 2rem;
+    color: var(--ds-gray-400);
+  }
+
+  .mission-sidebar-panel {
+    margin-top: auto;
+  }
+
+  @media (max-width: 1200px) {
+    .mission-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .mission-shell {
+      padding: var(--ds-space-lg);
+    }
+
+    .mission-hero,
+    .mission-panel-head {
+      padding-inline: var(--ds-space-lg);
+    }
+
+    .mission-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .mission-table-wrap {
+      padding: 0;
+    }
+
+    .mission-table {
+      min-width: 860px;
+      border-spacing: 0 8px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mission-shell">
+  <section class="mission-hero">
+    <div class="mission-hero-top">
+      <div>
+        <span class="mission-eyebrow">
+          <i class="bi bi-grid-1x2"></i>
+          Pilotage qualite
+        </span>
+        <h1>{% if is_operator %}Mes missions terrain{% else %}Missions de controle{% endif %}</h1>
+        <p>
+          {% if not is_operator %}
+          Une vue plus propre pour suivre les missions, filtrer rapidement et agir sans te perdre dans un tableau brut.
+          {% else %}
+          Consulte les missions actives et ouvre rapidement le detail des controles a effectuer.
+          {% endif %}
+        </p>
+      </div>
+      {% if not is_operator %}
+      <div class="mission-hero-actions">
+        <a href="{% url 'Gamme:missioncontrole_create' %}" class="btn btn-primary">
+          <i class="bi bi-plus-lg"></i>
+          Nouvelle mission
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mission-stats">
+      <div class="mission-stat">
+        <span class="mission-stat-label">Total</span>
+        <div class="mission-stat-value">{{ missions_total }}</div>
+        <div class="mission-stat-note">missions visibles dans ce perimetre</div>
+      </div>
+      <div class="mission-stat">
+        <span class="mission-stat-label">Actives</span>
+        <div class="mission-stat-value">{{ missions_active }}</div>
+        <div class="mission-stat-note">pretes a etre exploitees</div>
+      </div>
+      <div class="mission-stat">
+        <span class="mission-stat-label">Inactives</span>
+        <div class="mission-stat-value">{{ missions_inactive }}</div>
+        <div class="mission-stat-note">archivees ou en pause</div>
+      </div>
+      <div class="mission-stat">
+        <span class="mission-stat-label">PDF disponibles</span>
+        <div class="mission-stat-value">{{ missions_with_pdf }}</div>
+        <div class="mission-stat-note">gammes deja generees</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mission-panel">
+    <div class="mission-panel-head">
+      <div>
+        <h2 class="mission-panel-title">Catalogue des missions</h2>
+        <p class="mission-panel-subtitle">La zone centrale reste dediee au hero et au tableau, pendant que les filtres vivent dans la colonne laterale.</p>
+      </div>
+      <div class="mission-chip-row">
+        <span class="mission-chip"><i class="bi bi-list-ul"></i> {{ object_list.count }} mission{{ object_list.count|pluralize }}</span>
+        <span class="mission-chip"><i class="bi bi-arrow-down-up"></i> Tri local par colonne</span>
+      </div>
+    </div>
+
+    <div class="mission-table-wrap">
+      <div class="table-responsive">
+        <table class="table mission-table" id="missionsTable">
+          <thead>
+            <tr>
+              <th class="sortable" data-sort="0" data-type="text">Code</th>
+              <th class="sortable" data-sort="1" data-type="text">Intitule</th>
+              <th class="sortable" data-sort="2" data-type="text">Reference</th>
+              <th class="sortable" data-sort="3" data-type="text">Description</th>
+              <th class="sortable text-center" data-sort="4" data-type="text">Statut</th>
+              <th class="sortable" data-sort="5" data-type="date">Creation</th>
+              {% if not is_operator %}<th class="text-end">Actions</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for mission in object_list %}
+            <tr>
+              <td>
+                <span class="mission-code">{{ mission.code }}</span>
+              </td>
+              <td>
+                <p class="mission-main-title">{{ mission.intitule }}</p>
+                <div class="mission-subline">
+                  {% if mission.client %}Client: {{ mission.client }}{% else %}Sans client renseigne{% endif %}
+                </div>
+              </td>
+              <td>
+                <span class="mission-ref">{{ mission.reference }}</span>
+              </td>
+              <td>
+                <div class="mission-desc" title="{{ mission.description }}">{{ mission.description|truncatewords:16 }}</div>
+              </td>
+              <td class="text-center">
+                {% if mission.statut %}
+                <span class="badge-dot badge-success">Actif</span>
+                {% else %}
+                <span class="badge-dot badge-danger">Inactif</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="mission-date">
+                  <strong>{{ mission.date_creation|date:"d/m/Y" }}</strong>
+                  <span>{{ mission.date_creation|date:"H:i" }}</span>
+                </div>
+              </td>
+              {% if not is_operator %}
+              <td>
+                <div class="ds-action-group">
+                  {% if mission.pdf_file %}
+                  <a href="{% url 'Gamme:view_gamme_pdf' mission.id %}" class="ds-action-btn ds-action-btn--primary" data-bs-toggle="tooltip" title="Voir le PDF" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                  </a>
+                  {% else %}
+                  <button type="button" class="ds-action-btn ds-action-btn--disabled" disabled data-bs-toggle="tooltip" title="Aucun PDF disponible">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                  </button>
+                  {% endif %}
+                  <button type="button" class="ds-action-btn ds-action-btn--success" onclick="savePDF('{{ mission.id }}', this)" data-bs-toggle="tooltip" title="Generer le PDF">
+                    <i class="bi bi-file-pdf"></i>
+                  </button>
+                  <a href="{% url 'Gamme:missioncontrole_update' mission.id %}" class="ds-action-btn ds-action-btn--primary" data-bs-toggle="tooltip" title="Modifier">
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+                  <button type="button" class="ds-action-btn ds-action-btn--danger" onclick="showDeleteConfirmation('{{ mission.id }}')" data-bs-toggle="tooltip" title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{% if is_operator %}6{% else %}7{% endif %}" class="mission-empty">
+                <div class="mission-empty-card empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <p>Aucune mission ne correspond aux filtres actuels.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mission-footer">
+      <div><span id="rowCount">{{ object_list.count }}</span> mission{{ object_list.count|pluralize }} affichee{{ object_list.count|pluralize }}</div>
+    </div>
+  </section>
+</div>
+
+{% for mission in object_list %}
+<div class="modal fade" id="deleteModal{{ mission.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Supprimer la mission</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-center gap-3 p-4">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--ds-danger-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-exclamation-triangle" style="color:var(--ds-danger);font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <p style="margin:0;font-size:.96rem;">Confirmer la suppression de <strong>{{ mission.intitule }}</strong> ?</p>
+            <p style="margin:6px 0 0;font-size:.82rem;color:var(--ds-text-muted);">Cette action est irreversible.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-dismiss="modal">Annuler</button>
+        <form method="post" action="{% url 'Gamme:missioncontrole_delete' mission.id %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm" style="background:var(--ds-danger);border-color:var(--ds-danger);color:#fff;">
+            <i class="bi bi-trash3"></i>
+            Supprimer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+      new bootstrap.Tooltip(el);
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var table = document.getElementById('missionsTable');
+    if (!table) return;
+
+    var headers = table.querySelectorAll('th.sortable');
+    var tbody = table.querySelector('tbody');
+
+    headers.forEach(function(th) {
+      th.addEventListener('click', function() {
+        var colIndex = parseInt(this.dataset.sort);
+        var dataType = this.dataset.type || 'text';
+        var isAsc = this.classList.contains('sort-asc');
+
+        headers.forEach(function(h) { h.classList.remove('sort-asc', 'sort-desc'); });
+
+        var direction = isAsc ? 'desc' : 'asc';
+        this.classList.add('sort-' + direction);
+
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+        rows = rows.filter(function(r) { return r.cells.length > 1; });
+
+        rows.sort(function(a, b) {
+          var aVal = a.cells[colIndex] ? a.cells[colIndex].textContent.trim() : '';
+          var bVal = b.cells[colIndex] ? b.cells[colIndex].textContent.trim() : '';
+
+          if (dataType === 'date') {
+            var aDate = parseDate(aVal);
+            var bDate = parseDate(bVal);
+            return direction === 'asc' ? aDate - bDate : bDate - aDate;
+          }
+
+          var cmp = aVal.localeCompare(bVal, 'fr', { numeric: true });
+          return direction === 'asc' ? cmp : -cmp;
+        });
+
+        rows.forEach(function(row) { tbody.appendChild(row); });
+      });
+    });
+
+    function parseDate(str) {
+      if (!str) return 0;
+      var parts = str.split(/[\/\s:]/);
+      if (parts.length < 3) return 0;
+      return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+    }
+  });
+
+  async function savePDF(missionId, button) {
+    var originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+    try {
+      var csrftoken = getCookie('csrftoken');
+      if (!csrftoken) throw new Error('CSRF token not found');
+
+      var response = await fetch('/gamme/missioncontrole/' + missionId + '/generate-pdf/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
+
+      var data = await response.json();
+      if (!response.ok) throw new Error(data.error || data.detail || 'Erreur serveur');
+
+      showAlert('success', 'PDF genere avec succes.');
+      setTimeout(function() { window.location.reload(); }, 800);
+    } catch (error) {
+      showAlert('danger', 'Erreur : ' + error.message);
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalContent;
+    }
+  }
+
+  function showDeleteConfirmation(missionId) {
+    var modal = new bootstrap.Modal(document.getElementById('deleteModal' + missionId));
+    modal.show();
+  }
+
+  function showAlert(type, message) {
+    document.querySelectorAll('.alert').forEach(function(a) { a.remove(); });
+    var div = document.createElement('div');
+    div.className = 'alert alert-' + type + ' alert-dismissible fade show';
+    div.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;max-width:400px;font-size:.875rem;box-shadow:var(--ds-shadow-md);';
+    div.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    document.body.appendChild(div);
+    setTimeout(function() { try { new bootstrap.Alert(div).close(); } catch(e){} }, 4000);
+  }
+
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+{% endblock %}
+

@@ -1,0 +1,283 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+
+{% block page_title %}Modifier - Gamme de Controle{% endblock %}
+{% block topbar_title %}Modifier l'utilisateur{% endblock %}
+{% block topbar_subtitle %}Mettre a jour les informations et le role du compte{% endblock %}
+
+{% block extra_head %}
+<style>
+  .edituser-shell {
+    padding: var(--ds-space-xl);
+    max-width: 860px;
+  }
+
+  .edituser-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .edituser-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .edituser-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-xl);
+    flex-wrap: wrap;
+  }
+
+  .edituser-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .edituser-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .edituser-hero p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .edituser-hero-actions .btn {
+    min-height: 46px;
+    padding-inline: 18px;
+    border-radius: var(--ds-radius-md);
+    box-shadow: none;
+  }
+
+  .edituser-hero-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ds-hero-start);
+  }
+
+  .edituser-hero-actions .btn-primary:hover {
+    background: var(--ds-gray-100);
+    border-color: var(--ds-gray-100);
+    color: var(--ds-hero-start);
+  }
+
+  .edituser-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .edituser-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .edituser-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .edituser-form {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-lg);
+  }
+
+  .edituser-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--ds-space-md);
+  }
+
+  .edituser-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .edituser-role-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-md);
+  }
+
+  .edituser-role-option {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-md) var(--ds-space-lg);
+    border-radius: var(--ds-radius-md);
+    border: 1.5px solid var(--ds-border);
+    background: var(--ds-surface);
+    cursor: pointer;
+    transition: all var(--ds-transition);
+  }
+
+  .edituser-role-option:hover {
+    border-color: var(--ds-primary);
+    background: var(--ds-primary-soft);
+  }
+
+  .edituser-role-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--ds-primary);
+    flex-shrink: 0;
+  }
+
+  .edituser-role-label {
+    font-size: var(--ds-text-base);
+    font-weight: 600;
+    color: var(--ds-text);
+  }
+
+  .edituser-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-top: 1px solid var(--ds-border);
+  }
+
+  @media (max-width: 768px) {
+    .edituser-shell { padding: var(--ds-space-lg); }
+    .edituser-hero { padding-inline: var(--ds-space-lg); }
+    .edituser-field-grid { grid-template-columns: 1fr; }
+    .edituser-form { padding: var(--ds-space-lg); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edituser-shell">
+  <section class="edituser-hero">
+    <div class="edituser-hero-top">
+      <div>
+        <span class="edituser-eyebrow">
+          <i class="bi bi-pencil-square"></i>
+          Modifier le compte
+        </span>
+        <h1>Modifier l'utilisateur</h1>
+        <p>Mets a jour les informations personnelles et le role de ce compte.</p>
+      </div>
+      <div class="edituser-hero-actions">
+        <a href="{% url 'Gamme:user_list' %}" class="btn btn-primary">
+          <i class="bi bi-arrow-left"></i>
+          Retour a la liste
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="edituser-panel">
+    <div class="edituser-panel-head">
+      <h2 class="edituser-panel-title">Informations de l'utilisateur</h2>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="edituser-form">
+        <div class="edituser-field-grid">
+          <div class="edituser-field">
+            <label class="form-label" for="id_username">Nom d'utilisateur</label>
+            <input type="text" class="form-control" id="id_username" name="username"
+              value="{{ form.username.value|default:'' }}" required>
+          </div>
+          <div class="edituser-field">
+            <label class="form-label" for="id_email">Adresse email</label>
+            <input type="email" class="form-control" id="id_email" name="email"
+              value="{{ form.email.value|default:'' }}" required>
+          </div>
+          <div class="edituser-field">
+            <label class="form-label" for="id_first_name">Prenom</label>
+            <input type="text" class="form-control" id="id_first_name" name="first_name"
+              value="{{ form.first_name.value|default:'' }}">
+          </div>
+          <div class="edituser-field">
+            <label class="form-label" for="id_last_name">Nom</label>
+            <input type="text" class="form-control" id="id_last_name" name="last_name"
+              value="{{ form.last_name.value|default:'' }}">
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Role</label>
+          <div class="edituser-role-grid">
+            <label class="edituser-role-option">
+              <input type="radio" name="role" value="op" {% if selected_role == 'op' %}checked{% endif %} required>
+              <div>
+                <span class="edituser-role-label">Operateur</span>
+                <span style="display:block;font-size:var(--ds-text-sm);color:var(--ds-text-secondary);">Acces terrain, missions et consultation</span>
+              </div>
+            </label>
+            <label class="edituser-role-option">
+              <input type="radio" name="role" value="rs" {% if selected_role == 'rs' %}checked{% endif %}>
+              <div>
+                <span class="edituser-role-label">Responsable</span>
+                <span style="display:block;font-size:var(--ds-text-sm);color:var(--ds-text-secondary);">Supervision equipe, gestion des gammes</span>
+              </div>
+            </label>
+            <label class="edituser-role-option">
+              <input type="radio" name="role" value="ro" {% if selected_role == 'ro' %}checked{% endif %}>
+              <div>
+                <span class="edituser-role-label">RO (Read Only)</span>
+                <span style="display:block;font-size:var(--ds-text-sm);color:var(--ds-text-secondary);">Consultation et validation</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="edituser-actions">
+        <a href="{% url 'Gamme:user_list' %}" class="btn btn-outline-primary">
+          <i class="bi bi-x-lg"></i> Annuler
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save"></i> Enregistrer les modifications
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

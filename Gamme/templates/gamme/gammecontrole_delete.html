@@ -1,0 +1,217 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+{% block page_title %}Supprimer Gamme - Gamme de Controle{% endblock %}
+{% block topbar_title %}Supprimer une gamme{% endblock %}
+{% block topbar_subtitle %}Confirmation de suppression{% endblock %}
+
+{% block content %}
+<style>
+  .gamme-delete-shell {
+    padding: var(--ds-space-xl);
+  }
+
+  .gamme-delete-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, rgba(220, 38, 38, 0.18), transparent 26%),
+      linear-gradient(135deg, #7f1d1d 0%, #991b1b 55%, #b91c1c 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .gamme-delete-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .gamme-delete-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .gamme-delete-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .gamme-delete-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .gamme-delete-hero p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .gamme-delete-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .gamme-delete-panel-head {
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .gamme-delete-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .gamme-delete-body {
+    padding: var(--ds-space-xl);
+  }
+
+  .gamme-delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg);
+    border-radius: var(--ds-radius-lg);
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .gamme-delete-warning i {
+    font-size: 1.3rem;
+    color: #dc2626;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .gamme-delete-warning p {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-sm);
+    line-height: 1.6;
+  }
+
+  .gamme-delete-info {
+    padding: var(--ds-space-md) var(--ds-space-lg);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-surface-muted);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .gamme-delete-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: var(--ds-text-sm);
+  }
+
+  .gamme-delete-info-label {
+    color: var(--ds-text-secondary);
+  }
+
+  .gamme-delete-info-value {
+    font-weight: 600;
+    color: var(--ds-text);
+  }
+
+  .gamme-delete-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-top: 1px solid var(--ds-border);
+  }
+</style>
+
+<div class="gamme-delete-shell">
+  <section class="gamme-delete-hero">
+    <div class="gamme-delete-hero-inner">
+      <span class="gamme-delete-eyebrow">
+        <i class="bi bi-exclamation-triangle"></i>
+        Suppression
+      </span>
+      <h1>Supprimer une gamme</h1>
+      <p>Cette action est irreversible.</p>
+    </div>
+  </section>
+
+  <div class="gamme-delete-panel">
+    <div class="gamme-delete-panel-head">
+      <div>
+        <h2 class="gamme-delete-panel-title">Confirmer la suppression</h2>
+      </div>
+    </div>
+
+    <div class="gamme-delete-body">
+      <div class="gamme-delete-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <p>
+          Tu es sur le point de supprimer definitivement la gamme <strong>{{ object.intitule }}</strong>.
+          Toutes les operations associees seront egalement supprimees. Cette action est irreversible.
+        </p>
+      </div>
+
+      <div class="gamme-delete-info">
+        <div class="gamme-delete-info-row">
+          <span class="gamme-delete-info-label">Intitule</span>
+          <span class="gamme-delete-info-value">{{ object.intitule }}</span>
+        </div>
+        <div class="gamme-delete-info-row">
+          <span class="gamme-delete-info-label">Mission</span>
+          <span class="gamme-delete-info-value">{{ object.mission.intitule|default:"-" }}</span>
+        </div>
+        <div class="gamme-delete-info-row">
+          <span class="gamme-delete-info-label">Version</span>
+          <span class="gamme-delete-info-value">v{{ object.version }}</span>
+        </div>
+        <div class="gamme-delete-info-row">
+          <span class="gamme-delete-info-label">Statut</span>
+          <span class="gamme-delete-info-value">
+            <span class="ds-badge {% if object.statut %}ds-badge--active{% else %}ds-badge--inactive{% endif %}">
+              {% if object.statut %}Actif{% else %}Inactif{% endif %}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gamme-delete-actions">
+      <a href="{% url 'Gamme:gammecontrole_list' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Annuler
+      </a>
+      <form method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+          <i class="bi bi-trash"></i> Supprimer
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

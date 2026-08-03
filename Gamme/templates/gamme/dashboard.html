@@ -1,0 +1,382 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+{% block page_title %}Tableau de bord - Gamme de Controle{% endblock %}
+{% block topbar_title %}Tableau de bord{% endblock %}
+{% block topbar_subtitle %}Vue d'ensemble du projet{% endblock %}
+
+{% block content %}
+<style>
+  .dash-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+  }
+
+  .dash-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .dash-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .dash-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .dash-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .dash-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .dash-hero p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--ds-space-lg);
+  }
+
+  .dash-stat-card {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-md);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .dash-stat-card:hover {
+    box-shadow: var(--ds-shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .dash-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--ds-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .dash-stat-icon--navy {
+    background: var(--ds-accent-soft);
+    color: var(--ds-primary);
+  }
+
+  .dash-stat-icon--green {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
+
+  .dash-stat-icon--orange {
+    background: var(--ds-accent-soft);
+    color: var(--ds-accent);
+  }
+
+  .dash-stat-icon--slate {
+    background: var(--ds-surface-muted);
+    color: var(--ds-text-secondary);
+  }
+
+  .dash-stat-info h3 {
+    margin: 0;
+    font-size: var(--ds-text-2xl);
+    font-weight: 800;
+    color: var(--ds-text);
+    line-height: 1;
+  }
+
+  .dash-stat-info span {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--ds-text-xs);
+    color: var(--ds-text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dash-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ds-space-xl);
+  }
+
+  @media (max-width: 900px) {
+    .dash-panels { grid-template-columns: 1fr; }
+  }
+
+  .dash-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .dash-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .dash-panel-title {
+    margin: 0;
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    color: var(--ds-text);
+    letter-spacing: -0.02em;
+  }
+
+  .dash-panel-body {
+    padding: 0;
+  }
+
+  .dash-panel-body--padded {
+    padding: var(--ds-space-xl);
+  }
+
+  .dash-empty {
+    padding: var(--ds-space-2xl);
+    text-align: center;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .dash-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ds-space-sm) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+    transition: background 0.15s ease;
+  }
+
+  .dash-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .dash-list-item:hover {
+    background: var(--ds-surface-muted);
+  }
+
+  .dash-list-item-info {
+    min-width: 0;
+  }
+
+  .dash-list-item-title {
+    font-size: var(--ds-text-sm);
+    font-weight: 600;
+    color: var(--ds-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dash-list-item-sub {
+    font-size: var(--ds-text-xs);
+    color: var(--ds-text-secondary);
+    margin-top: 1px;
+  }
+
+  .dash-quick {
+    display: flex;
+    gap: var(--ds-space-sm);
+    flex-wrap: wrap;
+  }
+
+  .dash-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--ds-radius-lg);
+    border: 1px solid var(--ds-border);
+    background: var(--ds-surface);
+    color: var(--ds-text);
+    font-size: var(--ds-text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .dash-quick-btn:hover {
+    border-color: var(--ds-primary);
+    color: var(--ds-primary);
+    background: var(--ds-accent-soft);
+  }
+</style>
+
+<div class="dash-shell">
+  <section class="dash-hero">
+    <div class="dash-hero-inner">
+      <span class="dash-eyebrow">
+        <i class="bi bi-speedometer2"></i>
+        Tableau de bord
+      </span>
+      <h1>Vue d'ensemble</h1>
+      <p>Suivi des missions de controle, gammes et configuration du projet.</p>
+    </div>
+  </section>
+
+  <div class="dash-stats">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon dash-stat-icon--navy"><i class="bi bi-clipboard2-data"></i></div>
+      <div class="dash-stat-info">
+        <h3>{{ total_missions }}</h3>
+        <span>Missions</span>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon dash-stat-icon--green"><i class="bi bi-clipboard2-check"></i></div>
+      <div class="dash-stat-info">
+        <h3>{{ total_gammes }}</h3>
+        <span>Gammes</span>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon dash-stat-icon--orange"><i class="bi bi-shield-check"></i></div>
+      <div class="dash-stat-info">
+        <h3>{{ total_epis }}</h3>
+        <span>Equipements</span>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon dash-stat-icon--slate"><i class="bi bi-clipboard2-check"></i></div>
+      <div class="dash-stat-info">
+        <h3>{{ total_moyens }}</h3>
+        <span>Moyens de controle</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-panels">
+    <div class="dash-panel">
+      <div class="dash-panel-head">
+        <h2 class="dash-panel-title">Missions recentes</h2>
+        <a href="{% url 'Gamme:missioncontrole_list' %}" class="dash-quick-btn" style="padding: 4px 10px; font-size: var(--ds-text-xs);">
+          Tout voir <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      <div class="dash-panel-body">
+        {% for m in recent_missions %}
+        <a href="{% url 'Gamme:missioncontrole_update' m.id %}" class="dash-list-item" style="text-decoration: none;">
+          <div class="dash-list-item-info">
+            <div class="dash-list-item-title">{{ m.intitule }}</div>
+            <div class="dash-list-item-sub">{{ m.code }} &middot; {{ m.reference }}</div>
+          </div>
+          <span class="ds-badge {% if m.statut %}ds-badge--active{% else %}ds-badge--inactive{% endif %}">
+            {% if m.statut %}Actif{% else %}Inactif{% endif %}
+          </span>
+        </a>
+        {% empty %}
+        <div class="dash-empty">Aucune mission enregistree.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="dash-panel">
+      <div class="dash-panel-head">
+        <h2 class="dash-panel-title">Gammes recentes</h2>
+        <a href="{% url 'Gamme:gammecontrole_list' %}" class="dash-quick-btn" style="padding: 4px 10px; font-size: var(--ds-text-xs);">
+          Tout voir <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      <div class="dash-panel-body">
+        {% for g in recent_gammes %}
+        <div class="dash-list-item">
+          <div class="dash-list-item-info">
+            <div class="dash-list-item-title">{{ g.intitule }}</div>
+            <div class="dash-list-item-sub">v{{ g.version }} &middot; {{ g.mission.intitule }}</div>
+          </div>
+          <span class="ds-badge {% if g.statut %}ds-badge--active{% else %}ds-badge--inactive{% endif %}">
+            {% if g.statut %}Actif{% else %}Inactif{% endif %}
+          </span>
+        </div>
+        {% empty %}
+        <div class="dash-empty">Aucune gamme enregistree.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if not user.is_op %}
+  <div>
+    <h3 style="margin: 0 0 var(--ds-space-md); font-size: var(--ds-text-md); font-weight: 700; color: var(--ds-text);">Actions rapides</h3>
+    <div class="dash-quick">
+      <a href="{% url 'Gamme:missioncontrole_create' %}" class="dash-quick-btn">
+        <i class="bi bi-plus-circle"></i> Nouvelle mission
+      </a>
+      <a href="{% url 'Gamme:gammecontrole_create' %}" class="dash-quick-btn">
+        <i class="bi bi-plus-circle"></i> Nouvelle gamme
+      </a>
+      <a href="{% url 'Gamme:epi_create' %}" class="dash-quick-btn">
+        <i class="bi bi-shield-check"></i> Ajouter un EPI
+      </a>
+      <a href="{% url 'Gamme:moyencontrole_create' %}" class="dash-quick-btn">
+        <i class="bi bi-clipboard2-check"></i> Ajouter un moyen
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if messages %}
+<div style="position: fixed; top: 16px; right: 16px; z-index: 9999; min-width: 280px;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="margin-bottom: 8px;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

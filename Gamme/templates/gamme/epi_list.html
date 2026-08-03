@@ -1,0 +1,579 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+
+{% block page_title %}EPI - Gamme de Controle{% endblock %}
+{% block topbar_title %}Equipements de Protection{% endblock %}
+{% block topbar_subtitle %}Gestion des EPI et equipements de securite{% endblock %}
+
+{% block extra_head %}
+<style>
+  .epi-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+  }
+
+  .epi-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .epi-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .epi-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-xl);
+    flex-wrap: wrap;
+  }
+
+  .epi-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .epi-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .epi-hero p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .epi-hero-actions .btn {
+    min-height: 46px;
+    padding-inline: 18px;
+    border-radius: var(--ds-radius-md);
+    box-shadow: none;
+  }
+
+  .epi-hero-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ds-hero-start);
+  }
+
+  .epi-hero-actions .btn-primary:hover {
+    background: var(--ds-gray-100);
+    border-color: var(--ds-gray-100);
+    color: var(--ds-hero-start);
+  }
+
+  .epi-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .epi-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+    flex-wrap: wrap;
+  }
+
+  .epi-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .epi-panel-subtitle {
+    margin: 4px 0 0;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .epi-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .epi-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-sm) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+  }
+
+  .epi-table-wrap {
+    padding: var(--ds-space-sm) var(--ds-space-md) var(--ds-space-md);
+  }
+
+  .epi-table {
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+
+  .epi-table thead th {
+    position: static;
+    background: transparent;
+    border: none;
+    padding: 0 18px 10px;
+    color: var(--ds-text-muted);
+    font-size: var(--ds-text-xs);
+  }
+
+  .epi-table tbody tr {
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-xs);
+    transition: box-shadow var(--ds-transition), transform var(--ds-transition);
+  }
+
+  .epi-table tbody tr:hover {
+    background: var(--ds-surface);
+    transform: translateY(-1px);
+    box-shadow: var(--ds-shadow-sm);
+  }
+
+  .epi-table tbody td {
+    padding: var(--ds-space-lg);
+    border: none;
+    background: transparent;
+    vertical-align: middle;
+  }
+
+  .epi-table tbody td:first-child {
+    border-top-left-radius: var(--ds-radius-lg);
+    border-bottom-left-radius: var(--ds-radius-lg);
+  }
+
+  .epi-table tbody td:last-child {
+    border-top-right-radius: var(--ds-radius-lg);
+    border-bottom-right-radius: var(--ds-radius-lg);
+  }
+
+  .epi-img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    border-radius: var(--ds-radius-sm);
+    border: 1px solid var(--ds-border);
+    cursor: pointer;
+    transition: transform var(--ds-transition);
+  }
+
+  .epi-img:hover {
+    transform: scale(1.08);
+  }
+
+  .epi-placeholder {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ds-radius-sm);
+    background: var(--ds-surface-muted);
+    border: 1px dashed var(--ds-gray-300);
+    color: var(--ds-gray-400);
+  }
+
+  .epi-name {
+    display: block;
+    color: var(--ds-text);
+    font-weight: 700;
+    font-size: var(--ds-text-base);
+  }
+
+  .epi-desc {
+    display: block;
+    margin-top: 2px;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .epi-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--ds-space-sm);
+  }
+
+  .epi-footer {
+    padding: var(--ds-space-lg) var(--ds-space-xl) 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    flex-wrap: wrap;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .epi-empty {
+    padding: 46px var(--ds-space-lg);
+  }
+
+  .epi-empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-md);
+    min-height: 220px;
+    border-radius: var(--ds-radius-lg);
+    border: 1px dashed var(--ds-gray-300);
+    background: var(--ds-surface-muted);
+    color: var(--ds-text-secondary);
+    text-align: center;
+  }
+
+  .epi-empty-card i {
+    font-size: 2rem;
+    color: var(--ds-gray-400);
+  }
+
+  @media (max-width: 768px) {
+    .epi-shell {
+      padding: var(--ds-space-lg);
+    }
+
+    .epi-hero,
+    .epi-panel-head {
+      padding-inline: var(--ds-space-lg);
+    }
+
+    .epi-table-wrap {
+      padding: 0;
+    }
+
+    .epi-table {
+      min-width: 600px;
+      border-spacing: 0 8px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="epi-shell">
+  <section class="epi-hero">
+    <div class="epi-hero-top">
+      <div>
+        <span class="epi-eyebrow">
+          <i class="bi bi-shield-check"></i>
+          Securite travail
+        </span>
+        <h1>Equipements de Protection</h1>
+        <p>Gestion des EPI utilises lors des missions de controle et de verification.</p>
+      </div>
+      <div class="epi-hero-actions">
+        <button type="button" class="btn btn-primary" onclick="openFormModal('{% url "Gamme:epi_create" %}', 'Ajouter un equipement')">
+          <i class="bi bi-plus-lg"></i>
+          Nouvel equipement
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="epi-panel">
+    <div class="epi-panel-head">
+      <div>
+        <h2 class="epi-panel-title">Catalogue des EPI</h2>
+        <p class="epi-panel-subtitle">Liste complete des equipements de protection individuelle enregistres.</p>
+      </div>
+      <div class="epi-chip-row">
+        <span class="epi-chip"><i class="bi bi-list-ul"></i> {{ object_list.count }} EPI</span>
+      </div>
+    </div>
+
+    <div class="epi-table-wrap">
+      <div class="table-responsive">
+        <table class="table epi-table">
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Nom</th>
+              <th>Commentaire</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in object_list %}
+            <tr>
+              <td>
+                {% if item.photo %}
+                <img src="{{ item.photo.url }}" alt="{{ item.nom }}" class="epi-img"
+                     data-bs-toggle="modal" data-bs-target="#photoModal{{ item.id }}">
+                <div class="modal fade" id="photoModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">{{ item.nom }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                      </div>
+                      <div class="modal-body text-center">
+                        <img src="{{ item.photo.url }}" alt="{{ item.nom }}" class="img-fluid" style="max-height: 70vh; width: auto;">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% else %}
+                <div class="epi-placeholder">
+                  <i class="bi bi-shield-x"></i>
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="epi-name">{{ item.nom }}</span>
+              </td>
+              <td>
+                <span class="epi-desc" title="{{ item.commentaire|default:'' }}">{{ item.commentaire|truncatechars:50|default:"Aucun commentaire" }}</span>
+              </td>
+              <td>
+                <div class="ds-action-group">
+                  <button type="button" class="ds-action-btn ds-action-btn--primary" onclick="openFormModal('{% url "Gamme:epi_update" item.id %}', 'Modifier l\'equipement')" data-bs-toggle="tooltip" title="Modifier">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button type="button" class="ds-action-btn ds-action-btn--danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}" title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="epi-empty">
+                <div class="epi-empty-card empty-state">
+                  <i class="bi bi-shield-x"></i>
+                  <p>Aucun equipement de protection enregistre.</p>
+                  <button type="button" class="btn btn-primary" style="margin-top:8px;" onclick="openFormModal('{% url "Gamme:epi_create" %}', 'Ajouter un equipement')">
+                    <i class="bi bi-plus-lg"></i> Ajouter un equipement
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="epi-footer">
+      <div>{{ object_list.count }} equipement{{ object_list.count|pluralize }} enregistre{{ object_list.count|pluralize:"s" }}</div>
+    </div>
+  </section>
+</div>
+
+{% for item in object_list %}
+<div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Supprimer l'equipement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-center gap-3 p-4">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--ds-danger-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-exclamation-triangle" style="color:var(--ds-danger);font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <p style="margin:0;font-size:.96rem;">Confirmer la suppression de <strong>{{ item.nom }}</strong> ?</p>
+            <p style="margin:6px 0 0;font-size:.82rem;color:var(--ds-text-muted);">Cette action est irreversible.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-dismiss="modal">Annuler</button>
+        <form action="{% url 'Gamme:epi_delete' item.id %}" method="post" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm" style="background:var(--ds-danger);border-color:var(--ds-danger);color:#fff;">
+            <i class="bi bi-trash3"></i>
+            Supprimer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Shared form modal -->
+<div class="ds-modal-overlay" id="dsFormModal">
+  <div class="ds-modal" style="max-width:720px;">
+    <div class="ds-modal-header">
+      <h2 class="ds-modal-title" id="dsFormModalTitle"></h2>
+      <button type="button" class="ds-modal-close" onclick="closeFormModal()" aria-label="Fermer">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="ds-modal-body" id="dsFormModalBody"></div>
+  </div>
+</div>
+
+<script>
+var _dsFormDirty = false;
+
+function openFormModal(url, title) {
+  var overlay = document.getElementById('dsFormModal');
+  var titleEl = document.getElementById('dsFormModalTitle');
+  var bodyEl = document.getElementById('dsFormModalBody');
+  titleEl.textContent = title;
+  bodyEl.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2" style="color:var(--ds-text-muted);">Chargement...</p></div>';
+  overlay.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  _dsFormDirty = false;
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+      var form = doc.querySelector('form');
+      var scripts = doc.querySelectorAll('script');
+      if (form) {
+        form.setAttribute('data-modal-form', '1');
+        form.setAttribute('action', url);
+        form.setAttribute('enctype', 'multipart/form-data');
+        form.addEventListener('input', function() { _dsFormDirty = true; });
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(form);
+        scripts.forEach(function(s) {
+          var newScript = document.createElement('script');
+          newScript.textContent = s.textContent;
+          bodyEl.appendChild(newScript);
+        });
+      } else {
+        bodyEl.innerHTML = html;
+      }
+      var modalForm = bodyEl.querySelector('[data-modal-form]');
+      if (modalForm) {
+        modalForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          submitFormModal(this, url);
+        });
+      }
+    });
+}
+
+function submitFormModal(form, originalUrl) {
+  var bodyEl = document.getElementById('dsFormModalBody');
+  var formData = new FormData(form);
+  var actionUrl = form.action || originalUrl;
+
+  var submitBtn = form.querySelector('[type="submit"]');
+  var origText = submitBtn ? submitBtn.innerHTML : '';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi...';
+  }
+
+  fetch(actionUrl, {
+    method: 'POST',
+    body: formData,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      _dsFormDirty = false;
+      closeFormModal();
+      window.location.reload();
+    } else if (data.form_html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(data.form_html, 'text/html');
+      var newForm = doc.querySelector('form');
+      if (newForm) {
+        newForm.setAttribute('data-modal-form', '1');
+        newForm.addEventListener('input', function() { _dsFormDirty = true; });
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(newForm);
+        newForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          submitFormModal(this, actionUrl);
+        });
+      }
+    }
+  })
+  .catch(function() {
+    bodyEl.innerHTML = '<div class="alert alert-danger">Erreur de connexion. Veuillez reessayer.</div>';
+  })
+  .finally(function() {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = origText;
+    }
+  });
+}
+
+function closeFormModal() {
+  if (_dsFormDirty && !confirm('Abandonner les modifications ?')) return;
+  var overlay = document.getElementById('dsFormModal');
+  overlay.classList.remove('is-open');
+  document.body.style.overflow = '';
+  _dsFormDirty = false;
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var overlay = document.getElementById('dsFormModal');
+    if (overlay && overlay.classList.contains('is-open')) closeFormModal();
+  }
+});
+
+document.getElementById('dsFormModal').addEventListener('click', function(e) {
+  if (e.target === this) closeFormModal();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+    new bootstrap.Tooltip(el);
+  });
+});
+</script>
+{% endblock %}

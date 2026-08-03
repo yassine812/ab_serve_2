@@ -1,0 +1,670 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+
+{% block page_title %}Utilisateurs - Gamme de Controle{% endblock %}
+{% block topbar_title %}Utilisateurs{% endblock %}
+{% block topbar_subtitle %}Gestion des comptes et roles de l'equipe{% endblock %}
+
+{% block extra_head %}
+<style>
+  .user-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+  }
+
+  .user-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .user-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .user-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-xl);
+    flex-wrap: wrap;
+  }
+
+  .user-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .user-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .user-hero p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .user-hero-actions .btn {
+    min-height: 46px;
+    padding-inline: 18px;
+    border-radius: var(--ds-radius-md);
+    box-shadow: none;
+  }
+
+  .user-hero-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ds-hero-start);
+  }
+
+  .user-hero-actions .btn-primary:hover {
+    background: var(--ds-gray-100);
+    border-color: var(--ds-gray-100);
+    color: var(--ds-hero-start);
+  }
+
+  .user-stats {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--ds-space-md);
+    margin-top: var(--ds-space-xl);
+  }
+
+  .user-stat {
+    padding: var(--ds-space-lg);
+    border-radius: var(--ds-radius-lg);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .user-stat-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--ds-badge-font);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--ds-space-xs);
+  }
+
+  .user-stat-value {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ds-space-sm);
+    font-size: var(--ds-text-2xl);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .user-stat-note {
+    color: rgba(255, 255, 255, 0.74);
+    font-size: var(--ds-text-sm);
+  }
+
+  .user-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .user-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+    flex-wrap: wrap;
+  }
+
+  .user-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .user-panel-subtitle {
+    margin: 4px 0 0;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .user-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-sm) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+  }
+
+  .user-table-wrap {
+    padding: var(--ds-space-sm) var(--ds-space-md) var(--ds-space-md);
+  }
+
+  .user-table {
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+
+  .user-table thead th {
+    position: static;
+    background: transparent;
+    border: none;
+    padding: 0 18px 10px;
+    color: var(--ds-text-muted);
+    font-size: var(--ds-text-xs);
+  }
+
+  .user-table tbody tr {
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-xs);
+    transition: box-shadow var(--ds-transition), transform var(--ds-transition);
+  }
+
+  .user-table tbody tr:hover {
+    background: var(--ds-surface);
+    transform: translateY(-1px);
+    box-shadow: var(--ds-shadow-sm);
+  }
+
+  .user-table tbody td {
+    padding: var(--ds-space-lg);
+    border: none;
+    background: transparent;
+    font-size: var(--ds-text-base);
+  }
+
+  .user-table tbody td:first-child {
+    border-top-left-radius: var(--ds-radius-lg);
+    border-bottom-left-radius: var(--ds-radius-lg);
+  }
+
+  .user-table tbody td:last-child {
+    border-top-right-radius: var(--ds-radius-lg);
+    border-bottom-right-radius: var(--ds-radius-lg);
+  }
+
+  .user-name {
+    display: block;
+    color: var(--ds-text);
+    font-weight: 700;
+    font-size: var(--ds-text-base);
+  }
+
+  .user-email {
+    display: block;
+    margin-top: 2px;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .user-fullname {
+    color: var(--ds-text);
+    font-size: var(--ds-text-base);
+  }
+
+  .user-login {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--ds-text-sm);
+    color: var(--ds-text-secondary);
+  }
+
+  .user-login strong {
+    color: var(--ds-text);
+    font-size: var(--ds-text-base);
+  }
+
+  .user-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+  }
+
+  .user-footer {
+    padding: var(--ds-space-lg) var(--ds-space-xl) 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    flex-wrap: wrap;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .user-empty {
+    padding: 46px var(--ds-space-lg);
+  }
+
+  .user-empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-md);
+    min-height: 220px;
+    border-radius: var(--ds-radius-lg);
+    border: 1px dashed var(--ds-gray-300);
+    background: var(--ds-surface-muted);
+    color: var(--ds-text-secondary);
+    text-align: center;
+  }
+
+  .user-empty-card i {
+    font-size: 2rem;
+    color: var(--ds-gray-400);
+  }
+
+  @media (max-width: 1200px) {
+    .user-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .user-shell {
+      padding: var(--ds-space-lg);
+    }
+
+    .user-hero,
+    .user-panel-head {
+      padding-inline: var(--ds-space-lg);
+    }
+
+    .user-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .user-table-wrap {
+      padding: 0;
+    }
+
+    .user-table {
+      min-width: 700px;
+      border-spacing: 0 8px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="user-shell">
+  <section class="user-hero">
+    <div class="user-hero-top">
+      <div>
+        <span class="user-eyebrow">
+          <i class="bi bi-people"></i>
+          Gestion equipe
+        </span>
+        <h1>Utilisateurs</h1>
+        <p>Administration des comptes, roles et droits d'acces a la plateforme Gamme de Controle.</p>
+      </div>
+      <div class="user-hero-actions">
+        <a href="{% url 'Gamme:ajouter_utilisateur' %}" class="btn btn-primary" onclick="event.preventDefault(); openFormModal(this.href, 'Ajouter un utilisateur');">
+          <i class="bi bi-plus-lg"></i>
+          Ajouter un utilisateur
+        </a>
+      </div>
+    </div>
+
+    <div class="user-stats">
+      <div class="user-stat">
+        <span class="user-stat-label">Total</span>
+        <div class="user-stat-value">{{ user_count }}</div>
+        <div class="user-stat-note">utilisateurs enregistres</div>
+      </div>
+      <div class="user-stat">
+        <span class="user-stat-label">Operateurs</span>
+        <div class="user-stat-value">{{ users_op }}</div>
+        <div class="user-stat-note">acces terrain</div>
+      </div>
+      <div class="user-stat">
+        <span class="user-stat-label">Responsables</span>
+        <div class="user-stat-value">{{ users_rs }}</div>
+        <div class="user-stat-note">supervision equipe</div>
+      </div>
+      <div class="user-stat">
+        <span class="user-stat-label">Inactifs</span>
+        <div class="user-stat-value">{{ users_inactive }}</div>
+        <div class="user-stat-note">sans connexion</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="user-panel">
+    <div class="user-panel-head">
+      <div>
+        <h2 class="user-panel-title">Liste des utilisateurs</h2>
+        <p class="user-panel-subtitle">Consulte et gere les comptes actifs sur la plateforme.</p>
+      </div>
+      <div class="user-chip-row">
+        <span class="user-chip"><i class="bi bi-list-ul"></i> {{ user_count }} utilisateur{{ user_count|pluralize }}</span>
+      </div>
+    </div>
+
+    <div class="user-table-wrap">
+      <div class="table-responsive">
+        <table class="table user-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Nom complet</th>
+              <th>Role</th>
+              <th>Derniere connexion</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>
+                <span class="user-name">{{ u.username }}</span>
+                <span class="user-email">{{ u.email }}</span>
+              </td>
+              <td>
+                <span class="user-fullname">{{ u.get_full_name|default:"-" }}</span>
+              </td>
+              <td>
+                {% if u.is_superuser %}
+                <span class="ds-badge ds-badge--danger"><i class="bi bi-shield-fill"></i> Admin</span>
+                {% elif u.is_rs %}
+                <span class="ds-badge ds-badge--accent"><i class="bi bi-star-fill"></i> Responsable</span>
+                {% elif u.is_ro %}
+                <span class="ds-badge ds-badge--success"><i class="bi bi-eye-fill"></i> RO</span>
+                {% elif u.is_op %}
+                <span class="ds-badge ds-badge--primary"><i class="bi bi-person-fill"></i> Operateur</span>
+                {% else %}
+                <span class="ds-badge ds-badge--ghost">Utilisateur</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="user-login">
+                  <strong>{{ u.last_login|date:"d/m/Y" }}</strong>
+                  <span>{{ u.last_login|date:"H:i"|default:"Jamais connecte" }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="ds-action-group">
+                  <button type="button" class="ds-action-btn ds-action-btn--primary" onclick="openFormModal('{% url "Gamme:user_update" u.id %}', 'Modifier l\'utilisateur')" data-bs-toggle="tooltip" title="Modifier">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button type="button" class="ds-action-btn ds-action-btn--danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ u.id }}" title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="user-empty">
+                <div class="user-empty-card empty-state">
+                  <i class="bi bi-people"></i>
+                  <p>Aucun utilisateur enregistre.</p>
+                </div>
+              </td>
+            </tr>
+{% endfor %}
+
+<!-- Shared form modal -->
+<div class="ds-modal-overlay" id="dsFormModal">
+  <div class="ds-modal" style="max-width:720px;">
+    <div class="ds-modal-header">
+      <h2 class="ds-modal-title" id="dsFormModalTitle"></h2>
+      <button type="button" class="ds-modal-close" onclick="closeFormModal()" aria-label="Fermer">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="ds-modal-body" id="dsFormModalBody"></div>
+  </div>
+</div>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="user-footer">
+      <div>{{ user_count }} utilisateur{{ user_count|pluralize }} affiche{{ user_count|pluralize }}</div>
+    </div>
+  </section>
+</div>
+
+{% for u in users %}
+<div class="modal fade" id="deleteUserModal{{ u.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Supprimer l'utilisateur</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-center gap-3 p-4">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--ds-danger-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-exclamation-triangle" style="color:var(--ds-danger);font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <p style="margin:0;font-size:.96rem;">Confirmer la suppression de <strong>{{ u.username }}</strong> ?</p>
+            <p style="margin:6px 0 0;font-size:.82rem;color:var(--ds-text-muted);">Cette action est irreversible.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-dismiss="modal">Annuler</button>
+        <form action="{% url 'Gamme:user_delete' u.id %}" method="post" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm" style="background:var(--ds-danger);border-color:var(--ds-danger);color:#fff;">
+            <i class="bi bi-trash3"></i>
+            Supprimer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+    new bootstrap.Tooltip(el);
+  });
+});
+
+var _dsFormDirty = false;
+
+function openFormModal(url, title) {
+  var overlay = document.getElementById('dsFormModal');
+  var titleEl = document.getElementById('dsFormModalTitle');
+  var bodyEl = document.getElementById('dsFormModalBody');
+  titleEl.textContent = title;
+  bodyEl.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2" style="color:var(--ds-text-muted);">Chargement...</p></div>';
+  overlay.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  _dsFormDirty = false;
+
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+      var form = doc.querySelector('form');
+      var scripts = doc.querySelectorAll('script');
+      if (form) {
+        form.setAttribute('data-modal-form', '1');
+        form.setAttribute('action', url);
+        form.setAttribute('enctype', 'multipart/form-data');
+        form.addEventListener('input', function() { _dsFormDirty = true; });
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(form);
+        scripts.forEach(function(s) {
+          var newScript = document.createElement('script');
+          newScript.textContent = s.textContent;
+          bodyEl.appendChild(newScript);
+        });
+      } else {
+        bodyEl.innerHTML = html;
+      }
+      var modalForm = bodyEl.querySelector('[data-modal-form]');
+      if (modalForm) {
+        modalForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          submitFormModal(this, url);
+        });
+      }
+    });
+}
+
+function submitFormModal(form, originalUrl) {
+  var bodyEl = document.getElementById('dsFormModalBody');
+  var formData = new FormData(form);
+  var actionUrl = form.action || originalUrl;
+
+  var submitBtn = form.querySelector('[type="submit"]');
+  var origText = submitBtn ? submitBtn.innerHTML : '';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Envoi...';
+  }
+
+  fetch(actionUrl, {
+    method: 'POST',
+    body: formData,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      _dsFormDirty = false;
+      closeFormModal();
+      window.location.reload();
+    } else if (data.form_html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(data.form_html, 'text/html');
+      var newForm = doc.querySelector('form');
+      if (newForm) {
+        newForm.setAttribute('data-modal-form', '1');
+        newForm.addEventListener('input', function() { _dsFormDirty = true; });
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(newForm);
+        newForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          submitFormModal(this, actionUrl);
+        });
+      }
+    }
+  })
+  .catch(function(err) {
+    bodyEl.innerHTML = '<div class="alert alert-danger">Erreur de connexion. Veuillez reessayer.</div>';
+  })
+  .finally(function() {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = origText;
+    }
+  });
+}
+
+function closeFormModal() {
+  if (_dsFormDirty && !confirm('Abandonner les modifications ?')) return;
+  var overlay = document.getElementById('dsFormModal');
+  overlay.classList.remove('is-open');
+  document.body.style.overflow = '';
+  _dsFormDirty = false;
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var overlay = document.getElementById('dsFormModal');
+    if (overlay && overlay.classList.contains('is-open')) {
+      closeFormModal();
+    }
+  }
+});
+
+document.getElementById('dsFormModal').addEventListener('click', function(e) {
+  if (e.target === this) closeFormModal();
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  var table = document.getElementById('usersTable');
+  if (!table) return;
+
+  var headers = table.querySelectorAll('th');
+  var tbody = table.querySelector('tbody');
+
+  headers.forEach(function(th, index) {
+    if (th.classList.contains('text-end')) return;
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', function() {
+      var isAsc = this.classList.contains('sort-asc');
+      headers.forEach(function(h) { h.classList.remove('sort-asc', 'sort-desc'); });
+      var direction = isAsc ? 'desc' : 'asc';
+      this.classList.add('sort-' + direction);
+
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      rows = rows.filter(function(r) { return r.cells.length > 1; });
+      rows.sort(function(a, b) {
+        var aVal = a.cells[index] ? a.cells[index].textContent.trim() : '';
+        var bVal = b.cells[index] ? b.cells[index].textContent.trim() : '';
+        var cmp = aVal.localeCompare(bVal, 'fr', { numeric: true });
+        return direction === 'asc' ? cmp : -cmp;
+      });
+      rows.forEach(function(row) { tbody.appendChild(row); });
+    });
+  });
+});
+</script>
+{% endblock %}

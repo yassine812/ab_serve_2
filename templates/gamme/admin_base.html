@@ -1,0 +1,196 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block page_title %}Gamme de Controle{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="{% static 'gamme/dist/css/adminlte.min.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/design-system.css' %}" />
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="app-body {% if user.is_op %}is-operator{% else %}has-left-nav{% endif %}">
+  <div class="app-wrapper {% block app_layout_class %}layout-standard{% endblock %}">
+    {% if not user.is_op %}
+    <aside class="app-sidebar" id="appLeftSidebar" aria-label="Navigation principale">
+      <div class="app-sidebar-inner">
+        <a href="{% url 'Gamme:dashboard' %}" class="sidebar-brand sidebar-brand--link" title="Retour au tableau de bord">
+          <img src="{% static 'logo.jpg' %}" alt="AB Serve" class="sidebar-brand-logo" />
+          <span class="sidebar-brand-copy">
+            <span class="sidebar-brand-name">AB Serve</span>
+            <span class="sidebar-brand-caption">Gamme de Controle</span>
+          </span>
+        </a>
+
+        <div class="sidebar-brand-sep"></div>
+
+        <div class="sidebar-nav-scroll">
+          <div class="sidebar-group">
+            <div class="sidebar-group-label">Gestion</div>
+            <ul class="nav sidebar-menu flex-column" id="navigation-gestion">
+              <li class="nav-item">
+                <a href="{% url 'Gamme:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                  <i class="nav-icon bi bi-speedometer2{% if request.resolver_match.url_name == 'dashboard' %}-fill{% endif %}"></i>
+                  <span class="nav-label">Tableau de bord</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'Gamme:missioncontrole_list' %}" class="nav-link {% if request.resolver_match.url_name == 'missioncontrole_list' %}active{% endif %}">
+                  <i class="nav-icon bi bi-clipboard2-data{% if request.resolver_match.url_name == 'missioncontrole_list' %}-fill{% endif %}"></i>
+                  <span class="nav-label">Missions</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'Gamme:gammecontrole_list' %}" class="nav-link {% if request.resolver_match.url_name == 'gammecontrole_list' %}active{% endif %}">
+                  <i class="nav-icon bi bi-clipboard2-check{% if request.resolver_match.url_name == 'gammecontrole_list' %}-fill{% endif %}"></i>
+                  <span class="nav-label">Gammes</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'Gamme:user_list' %}" class="nav-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+                  <i class="nav-icon bi bi-people{% if request.resolver_match.url_name == 'user_list' %}-fill{% endif %}"></i>
+                  <span class="nav-label">Utilisateurs</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="sidebar-group">
+            <div class="sidebar-group-label">Configuration</div>
+            <ul class="nav sidebar-menu flex-column" id="navigation-configuration">
+              <li class="nav-item">
+                <a href="{% url 'Gamme:epi_list' %}" class="nav-link {% if request.resolver_match.url_name == 'epi_list' %}active{% endif %}">
+                  <i class="nav-icon bi bi-shield{% if request.resolver_match.url_name == 'epi_list' %}-fill-check{% else %}-check{% endif %}"></i>
+                  <span class="nav-label">Equipements de protection</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'Gamme:moyencontrole_list' %}" class="nav-link {% if request.resolver_match.url_name == 'moyencontrole_list' %}active{% endif %}">
+                  <i class="nav-icon bi bi-clipboard2-check{% if request.resolver_match.url_name == 'moyencontrole_list' %}-fill{% endif %}"></i>
+                  <span class="nav-label">Moyens de controle</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </aside>
+    {% endif %}
+
+    <nav class="app-header navbar" aria-label="Barre principale">
+      <div class="topbar-shell">
+        <div class="topbar-start">
+          <div class="topbar-brand">
+            <span class="topbar-brand-name">AB Serve Missions</span>
+            <span class="topbar-brand-caption">Workspace qualite industrielle</span>
+          </div>
+
+          <div class="topbar-page">
+            <span class="topbar-page-title">{% block topbar_title %}Tableau de bord{% endblock %}</span>
+            <span class="topbar-page-subtitle">{% block topbar_subtitle %}Suivi des missions de controle et des gammes PDF{% endblock %}</span>
+          </div>
+        </div>
+
+        <div class="topbar-end">
+          {% block topbar_tools %}{% endblock %}
+
+          {% if user.username|slice:":5" == "demo_" %}
+          <a href="{% url 'Gamme:demo_switch' %}" class="demo-switch-btn" title="Changer de role">
+            <span class="demo-switch-badge">
+              <i class="bi bi-eye-fill"></i>
+              Mode demo
+            </span>
+          </a>
+          {% endif %}
+
+          <div class="dropdown user-menu">
+            <a href="#" class="nav-link user-trigger" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="user-trigger-avatar"><i class="bi bi-person-circle"></i></span>
+              <span class="user-trigger-name">{{ user.username }}</span>
+              <span class="user-trigger-role">{% if user.is_superuser or user.is_admin %}Admin{% elif user.is_ro %}RO{% elif user.is_rs %}Responsable{% elif user.is_op %}Operateur{% else %}Compte{% endif %}</span>
+              <i class="bi bi-chevron-down user-trigger-caret"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end topbar-dropdown">
+              <li class="topbar-dropdown-header">
+                <div class="topbar-dropdown-name">{{ user.username }}</div>
+                <div class="topbar-dropdown-role">{% if user.is_superuser or user.is_admin %}Administrateur{% elif user.is_ro %}RO{% elif user.is_rs %}Responsable{% elif user.is_op %}Operateur{% else %}Compte{% endif %}</div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a href="{% url 'Gamme:profile' %}" class="dropdown-item"><i class="bi bi-person"></i> Profil</a></li>
+              {% if user.is_authenticated %}
+              <li><a href="{% url 'Gamme:logout' %}" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Deconnexion</a></li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="app-main" id="appMainContent">
+      <div class="app-main-scroll">
+        {% block content %}{% endblock %}
+        <footer class="app-footer">
+          <span>Gamme de Controle</span>
+          <span class="app-footer-separator">|</span>
+          <span>Workspace qualite industrielle</span>
+          <span class="app-footer-separator">|</span>
+          <span>AB Serve</span>
+        </footer>
+      </div>
+    </main>
+
+    {% block right_sidebar %}{% endblock %}
+  </div>
+
+  <button type="button" class="app-drawer-backdrop" data-app-close-drawers aria-label="Fermer les panneaux lateraux"></button>
+
+  <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+  <script src="{% static 'gamme/dist/js/adminlte.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var body = document.body;
+      var toggles = document.querySelectorAll('[data-app-toggle]');
+      var closers = document.querySelectorAll('[data-app-close-drawers]');
+
+      function closeDrawers() {
+        body.classList.remove('nav-open', 'filters-open');
+      }
+
+      toggles.forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+          var target = this.getAttribute('data-app-toggle');
+          if (target === 'left-sidebar') {
+            body.classList.toggle('nav-open');
+            body.classList.remove('filters-open');
+          }
+          if (target === 'right-sidebar') {
+            body.classList.toggle('filters-open');
+            body.classList.remove('nav-open');
+          }
+        });
+      });
+
+      closers.forEach(function (closer) {
+        closer.addEventListener('click', closeDrawers);
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          closeDrawers();
+        }
+      });
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

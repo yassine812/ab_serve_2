@@ -1,0 +1,261 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+
+{% block page_title %}Supprimer - Gamme de Controle{% endblock %}
+{% block topbar_title %}Supprimer l'utilisateur{% endblock %}
+{% block topbar_subtitle %}Confirmation de suppression de compte{% endblock %}
+
+{% block extra_head %}
+<style>
+  .delete-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+    max-width: 860px;
+  }
+
+  .delete-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, rgba(220, 38, 38, 0.15), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, #4c0519 55%, #991b1b 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .delete-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .delete-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-xl);
+    flex-wrap: wrap;
+  }
+
+  .delete-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .delete-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .delete-hero p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .delete-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .delete-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .delete-panel-title {
+    margin: 0;
+    color: var(--ds-text);
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .delete-body {
+    padding: var(--ds-space-xl);
+  }
+
+  .delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ds-space-md);
+    padding: var(--ds-space-lg);
+    border-radius: var(--ds-radius-md);
+    background: var(--ds-danger-soft);
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    color: var(--ds-danger-text);
+    margin-bottom: var(--ds-space-xl);
+  }
+
+  .delete-warning i {
+    font-size: 1.2rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+    color: var(--ds-danger);
+  }
+
+  .delete-warning p {
+    margin: 0;
+    font-size: var(--ds-text-base);
+    line-height: 1.5;
+  }
+
+  .delete-warning strong {
+    font-weight: 700;
+  }
+
+  .delete-user-card {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-lg);
+    padding: var(--ds-space-lg);
+    border-radius: var(--ds-radius-md);
+    background: var(--ds-surface-muted);
+    border: 1px solid var(--ds-border);
+  }
+
+  .delete-user-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: var(--ds-primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--ds-primary);
+    flex-shrink: 0;
+  }
+
+  .delete-user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .delete-user-name {
+    display: block;
+    color: var(--ds-text);
+    font-weight: 700;
+    font-size: var(--ds-text-md);
+  }
+
+  .delete-user-meta {
+    display: block;
+    margin-top: 2px;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .delete-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-top: 1px solid var(--ds-border);
+  }
+
+  @media (max-width: 768px) {
+    .delete-shell {
+      padding: var(--ds-space-lg);
+    }
+
+    .delete-hero {
+      padding-inline: var(--ds-space-lg);
+    }
+
+    .delete-actions {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-shell">
+  <section class="delete-hero">
+    <div class="delete-hero-top">
+      <div>
+        <span class="delete-eyebrow">
+          <i class="bi bi-exclamation-triangle"></i>
+          Action irreversible
+        </span>
+        <h1>Supprimer l'utilisateur</h1>
+        <p>Cette action supprimera definitivement le compte et toutes les donnees associees.</p>
+      </div>
+      <a href="{% url 'Gamme:user_list' %}" class="btn btn-primary" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.25);color:#fff;">
+        <i class="bi bi-arrow-left"></i>
+        Retour a la liste
+      </a>
+    </div>
+  </section>
+
+  <section class="delete-panel">
+    <div class="delete-panel-head">
+      <h2 class="delete-panel-title">Confirmer la suppression</h2>
+    </div>
+
+    <div class="delete-body">
+      <div class="delete-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <p>Vous etes sur le point de supprimer definitivement l'utilisateur <strong>{{ object.username }}</strong>. Cette action est irreversible.</p>
+      </div>
+
+      <div class="delete-user-card">
+        <div class="delete-user-avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="delete-user-info">
+          <span class="delete-user-name">{{ object.get_full_name|default:object.username }}</span>
+          <span class="delete-user-meta">{{ object.email }} &middot; {% if object.is_superuser %}Admin{% elif object.is_rs %}Responsable{% elif object.is_op %}Operateur{% else %}Utilisateur{% endif %}</span>
+          <span class="delete-user-meta">Derniere connexion : {{ object.last_login|date:"d/m/Y H:i"|default:"Jamais connecte" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="delete-actions">
+      <a href="{% url 'Gamme:user_list' %}" class="btn btn-outline-primary">
+        <i class="bi bi-x-lg"></i>
+        Annuler
+      </a>
+      <form method="post" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background:var(--ds-danger);border-color:var(--ds-danger);color:#fff;">
+          <i class="bi bi-trash3"></i>
+          Confirmer la suppression
+        </button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,341 @@
+{% extends 'Gamme/admin_base.html' %}
+{% load static %}
+{% block page_title %}Gammes - Gamme de Controle{% endblock %}
+{% block topbar_title %}Gammes de controle{% endblock %}
+{% block topbar_subtitle %}Liste des gammes et operations associees{% endblock %}
+
+{% block content %}
+<style>
+  .gamme-shell {
+    padding: var(--ds-space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+  }
+
+  .gamme-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ds-radius-xl);
+    padding: var(--ds-space-2xl) var(--ds-space-2xl) 24px;
+    background:
+      radial-gradient(circle at top right, var(--ds-hero-accent), transparent 26%),
+      linear-gradient(135deg, var(--ds-hero-start) 0%, var(--ds-hero-mid) 55%, var(--ds-hero-end) 100%);
+    color: #fff;
+    box-shadow: var(--ds-shadow-hero);
+  }
+
+  .gamme-hero::after {
+    content: '';
+    position: absolute;
+    inset: auto -60px -60px auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .gamme-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-xl);
+    flex-wrap: wrap;
+  }
+
+  .gamme-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-xs) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+    letter-spacing: var(--ds-badge-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  .gamme-hero h1 {
+    margin: var(--ds-space-md) 0 var(--ds-space-sm);
+    font-size: var(--ds-text-3xl);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  .gamme-hero p {
+    margin: 0;
+    max-width: 760px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--ds-text-base);
+  }
+
+  .gamme-hero-actions .btn {
+    min-height: 46px;
+    padding-inline: 18px;
+    border-radius: var(--ds-radius-md);
+  }
+
+  .gamme-hero-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ds-hero-start);
+  }
+
+  .gamme-hero-actions .btn-primary:hover {
+    background: var(--ds-gray-100);
+    border-color: var(--ds-gray-100);
+  }
+
+  .gamme-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: var(--ds-space-md);
+  }
+
+  .gamme-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-sm);
+    padding: var(--ds-space-sm) var(--ds-space-md);
+    border-radius: var(--ds-badge-radius);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: var(--ds-badge-font);
+    font-weight: var(--ds-badge-weight);
+  }
+
+  .gamme-chip strong {
+    font-size: var(--ds-text-lg);
+  }
+
+  .gamme-panel {
+    border: var(--ds-card-border);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    overflow: hidden;
+  }
+
+  .gamme-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ds-space-lg) var(--ds-space-xl);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  .gamme-panel-title {
+    margin: 0;
+    font-size: var(--ds-text-md);
+    font-weight: 700;
+    color: var(--ds-text);
+    letter-spacing: -0.02em;
+  }
+
+  .gamme-table-wrap {
+    padding: var(--ds-space-sm) var(--ds-space-md) var(--ds-space-md);
+  }
+
+  .gamme-table {
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+
+  .gamme-table thead th {
+    position: static;
+    background: transparent;
+    border: none;
+    padding: 0 18px 10px;
+    color: var(--ds-text-muted);
+    font-size: var(--ds-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .gamme-table tbody tr {
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-xs);
+    transition: box-shadow var(--ds-transition), transform var(--ds-transition);
+  }
+
+  .gamme-table tbody tr:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ds-shadow-sm);
+  }
+
+  .gamme-table tbody td {
+    padding: var(--ds-space-lg);
+    border: none;
+    background: transparent;
+    vertical-align: middle;
+  }
+
+  .gamme-table tbody td:first-child {
+    border-top-left-radius: var(--ds-radius-lg);
+    border-bottom-left-radius: var(--ds-radius-lg);
+  }
+
+  .gamme-table tbody td:last-child {
+    border-top-right-radius: var(--ds-radius-lg);
+    border-bottom-right-radius: var(--ds-radius-lg);
+  }
+
+  .gamme-name {
+    display: block;
+    color: var(--ds-text);
+    font-weight: 700;
+    font-size: var(--ds-text-base);
+  }
+
+  .gamme-sub {
+    display: block;
+    margin-top: 2px;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .gamme-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .gamme-action-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ds-radius-md);
+    border: 1px solid var(--ds-border);
+    background: var(--ds-surface);
+    color: var(--ds-text-secondary);
+    font-size: 0.85rem;
+    transition: all var(--ds-transition);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .gamme-action-btn:hover {
+    background: var(--ds-accent-soft);
+    border-color: var(--ds-primary);
+    color: var(--ds-primary);
+  }
+
+  .gamme-action-btn--danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+
+  .gamme-empty {
+    padding: var(--ds-space-2xl);
+    text-align: center;
+    color: var(--ds-text-secondary);
+    font-size: var(--ds-text-sm);
+  }
+
+  .gamme-empty i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: var(--ds-space-md);
+    color: var(--ds-gray-300);
+  }
+</style>
+
+<div class="gamme-shell">
+  <section class="gamme-hero">
+    <div class="gamme-hero-top">
+      <div>
+        <span class="gamme-eyebrow">
+          <i class="bi bi-clipboard2-check"></i>
+          Gammes de controle
+        </span>
+        <h1>Gammes</h1>
+        <p>Gestion des gammes de controle, operations et evaluations associees.</p>
+        <div class="gamme-chip-row">
+          <span class="gamme-chip"><i class="bi bi-clipboard2-data"></i> Total <strong>{{ object_list.count }}</strong></span>
+          <span class="gamme-chip"><i class="bi bi-check-circle"></i> Actives <strong>{{ active_gammes }}</strong></span>
+        </div>
+      </div>
+      <div class="gamme-hero-actions">
+        <a href="{% url 'Gamme:gammecontrole_create' %}" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i> Nouvelle gamme
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="gamme-panel">
+    <div class="gamme-panel-head">
+      <div>
+        <h2 class="gamme-panel-title">Liste des gammes</h2>
+      </div>
+    </div>
+    <div class="gamme-table-wrap">
+      {% if object_list %}
+      <table class="gamme-table">
+        <thead>
+          <tr>
+            <th>Intitule</th>
+            <th>Mission</th>
+            <th>Version</th>
+            <th>Statut</th>
+            <th>Date</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for gamme in object_list %}
+          <tr>
+            <td>
+              <span class="gamme-name">{{ gamme.intitule }}</span>
+              <span class="gamme-sub">{{ gamme.No_incident|default:"" }}</span>
+            </td>
+            <td>
+              <span class="gamme-sub">{{ gamme.mission.intitule|default:"-" }}</span>
+            </td>
+            <td>v{{ gamme.version }}</td>
+            <td>
+              <span class="ds-badge {% if gamme.statut %}ds-badge--active{% else %}ds-badge--inactive{% endif %}">
+                {% if gamme.statut %}Actif{% else %}Inactif{% endif %}
+              </span>
+            </td>
+            <td>
+              <span class="gamme-sub">{{ gamme.date_creation|date:"d/m/Y" }}</span>
+            </td>
+            <td>
+              <div class="gamme-actions">
+                <a href="{% url 'Gamme:gammecontrole_update' gamme.id %}" class="gamme-action-btn" title="Modifier">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'Gamme:gammecontrole_delete' gamme.id %}" class="gamme-action-btn gamme-action-btn--danger" title="Supprimer">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="gamme-empty">
+        <i class="bi bi-clipboard2"></i>
+        Aucune gamme enregistree.<br>
+        <a href="{% url 'Gamme:gammecontrole_create' %}" style="color: var(--ds-primary); font-weight: 600;">Creer une gamme</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
