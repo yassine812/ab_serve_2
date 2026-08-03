@@ -40,7 +40,7 @@ SECRET_KEY = 'django-insecure-j0l_)#a9@m8v0xivvfm_qfj!dp55b3r1+@*%69#jyx021+r!r0
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', '1') == '1'
+DEBUG = os.getenv('DJANGO_DEBUG', '0' if IS_VERCEL else '1') == '1'
 
 DEFAULT_ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if host.strip()]
@@ -206,6 +206,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
