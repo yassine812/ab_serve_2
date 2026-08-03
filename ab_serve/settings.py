@@ -1,7 +1,6 @@
 import os
 import tempfile
 from datetime import timedelta
-from django.urls import reverse_lazy
 """
 Django settings for ab_serve project.
 
@@ -149,9 +148,9 @@ DATABASES = {
 
 
 # Custom login URL
-LOGIN_URL = 'Gamme:demo_select'
+LOGIN_URL = '/gamme/demo/'
 AUTH_USER_MODEL = 'Gamme.User'
-LOGIN_REDIRECT_URL = reverse_lazy('Gamme:dashboard')
+LOGIN_REDIRECT_URL = '/gamme/dashboard/'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -207,5 +206,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
