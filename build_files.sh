@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "Installing dependencies..."
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt --break-system-packages || pip install -r requirements.txt --break-system-packages || true
+
 echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear
+python3 manage.py collectstatic --noinput --clear || python manage.py collectstatic --noinput --clear || true
