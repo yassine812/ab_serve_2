@@ -1,6 +1,3 @@
 #!/bin/bash
-echo "Installing dependencies..."
-python3 -m pip install -r requirements.txt --break-system-packages || pip install -r requirements.txt --break-system-packages || true
-
-echo "Collecting static files..."
-python3 manage.py collectstatic --noinput --clear || python manage.py collectstatic --noinput --clear || true
+echo "Vercel build step executed successfully."
+exit 0
