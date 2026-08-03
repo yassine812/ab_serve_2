@@ -44,6 +44,8 @@ CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://localhost', 'http://127.
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+os.makedirs(STATIC_ROOT, exist_ok=True)
+
 
 
 # Additional locations of static files
@@ -116,14 +118,15 @@ IS_VERCEL = os.getenv('VERCEL') == '1' or 'VERCEL' in os.environ
 if IS_VERCEL:
     import shutil
     tmp_db = Path('/tmp/db.sqlite3')
-    if not tmp_db.exists() and (BASE_DIR / 'db.sqlite3').exists():
+    orig_db = BASE_DIR / 'db.sqlite3'
+    if not tmp_db.exists() and orig_db.exists():
         try:
-            shutil.copy2(BASE_DIR / 'db.sqlite3', tmp_db)
+            shutil.copy2(orig_db, tmp_db)
         except Exception:
             pass
-    db_path = tmp_db if tmp_db.exists() else BASE_DIR / 'db.sqlite3'
+    db_path = str(tmp_db) if tmp_db.exists() else str(orig_db)
 else:
-    db_path = BASE_DIR / 'db.sqlite3'
+    db_path = str(BASE_DIR / 'db.sqlite3')
 
 DATABASES = {
     'default': {
@@ -131,6 +134,7 @@ DATABASES = {
         'NAME': db_path,
     }
 }
+
 
 
 # Custom login URL
