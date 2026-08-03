@@ -1,4 +1,5 @@
 import os
+import tempfile
 from datetime import timedelta
 from django.urls import reverse_lazy
 """
@@ -17,6 +18,17 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_VERCEL = os.getenv('VERCEL') == '1' or 'VERCEL' in os.environ
+TMP_DIR = Path(tempfile.gettempdir())
+
+
+def ensure_dir(path):
+    """Create writable directories when possible without crashing on read-only runtimes."""
+    try:
+        os.makedirs(path, exist_ok=True)
+    except OSError:
+        if not IS_VERCEL:
+            raise
 
 
 # Quick-start development settings - unsuitable for production
@@ -44,7 +56,7 @@ CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://localhost', 'http://127.
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-os.makedirs(STATIC_ROOT, exist_ok=True)
+ensure_dir(STATIC_ROOT)
 
 
 
@@ -59,10 +71,10 @@ STATICFILES_DIRS = [str(path) for path in STATICFILES_DIRS if os.path.exists(str
 
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = str(TMP_DIR / 'media') if IS_VERCEL else os.path.join(BASE_DIR, 'media')
 
 # Create media directory if it doesn't exist
-os.makedirs(MEDIA_ROOT, exist_ok=True)
+ensure_dir(MEDIA_ROOT)
 
 # Application definition
 AUTH_USER_MODEL = 'Gamme.User'
@@ -113,11 +125,10 @@ WSGI_APPLICATION = 'ab_serve.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-IS_VERCEL = os.getenv('VERCEL') == '1' or 'VERCEL' in os.environ
 
 if IS_VERCEL:
     import shutil
-    tmp_db = Path('/tmp/db.sqlite3')
+    tmp_db = TMP_DIR / 'db.sqlite3'
     orig_db = BASE_DIR / 'db.sqlite3'
     if not tmp_db.exists() and orig_db.exists():
         try:
@@ -196,3 +207,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
